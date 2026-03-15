@@ -1,0 +1,39 @@
+# docker-compose.yml
+# Despliegue en red interna GAB - monitor.gab.local
+
+version: '3.8'
+
+services:
+  gab-monitor-api:
+    build:
+      context: ./GabMonitor.API
+      dockerfile: Dockerfile
+    image: gab-monitor-api:latest
+    container_name: gab-monitor-api
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__GabIrapuato=Server=GABIRA1\SQL2005;Database=GAB_Irapuato;Connect Timeout=130;User ID=sa;Password=${DB_PASSWORD};MultipleActiveResultSets=True;TrustServerCertificate=True
+    restart: unless-stopped
+    networks:
+      - gab-net
+
+  gab-monitor-web:
+    build:
+      context: ./gab-monitor-web
+      dockerfile: Dockerfile
+    image: gab-monitor-web:latest
+    container_name: gab-monitor-web
+    ports:
+      - "80:80"
+    depends_on:
+      - gab-monitor-api
+    restart: unless-stopped
+    networks:
+      - gab-net
+
+networks:
+  gab-net:
+    driver: bridge

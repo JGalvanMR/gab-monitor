@@ -1,0 +1,38 @@
+/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fuente mono para datos numéricos */
+@layer base {
+  html {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+  }
+  
+  body {
+    @apply bg-gray-800 text-white;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  /* Scrollbar personalizado para la tabla */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-900;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-600 rounded;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500;
+  }
+}
+
+@layer utilities {
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
