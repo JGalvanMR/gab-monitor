@@ -1,4 +1,9 @@
 // GabMonitor.API/Services/CalculoService.cs
+// CORRECCIONES:
+//   D-03: ObtenerLotePorFecha — usar CultureInfo("es-MX") explícitamente
+//   D-04: ParsearFechaDeLotePTP — usar DateTime.ParseExact para formato YYYYMMDD
+
+using System.Globalization;
 using GabMonitor.API.Models.Domain;
 using GabMonitor.API.Services.Interfaces;
 
@@ -10,6 +15,10 @@ namespace GabMonitor.API.Services;
 /// </summary>
 public class CalculoService : ICalculoService
 {
+    // Cultura del sistema original (Windows con configuración regional de México)
+    // Usado para replicar el comportamiento exacto de DateTime.ToString("ddd") del WinForms
+    private static readonly CultureInfo CulturaOriginal = new CultureInfo("es-MX");
+
     // ─── RN-001: Fecha de caducidad implícita por tipo de producto ────────────
 
     /// <summary>
@@ -38,7 +47,8 @@ public class CalculoService : ICalculoService
     /// <summary>
     /// Calcula días hasta caducidad.
     /// IMPORTANTE: El sistema original usa DateTime.Now.AddDays(-1) como referencia,
-    /// lo que hace que el día actual cuente como 1 día de vida.
+    /// lo que hace que el día actual cuente como 1 día de vida restante.
+    /// Replica exactamente: Mdias = Convert.ToDateTime(FECHA_CAD) - DateTime.Now.AddDays(-1)
     /// </summary>
     public int CalcularDiasHastaCaducidad(DateTime fechaCaducidad)
     {
@@ -71,11 +81,6 @@ public class CalculoService : ICalculoService
 
     // ─── RN-003: Cálculo peso PTC ────────────────────────────────────────────
 
-    /// <summary>
-    /// Calcula el peso estimado para tarimas PTC.
-    /// Fórmula: ((pesoBruto - tara) / cantidad) * cajasPorEntregar + ajuste hielo.
-    /// Replica el bloque de cálculo de kilos PTC en Genera().
-    /// </summary>
     public decimal CalcularPesoPTC(
         decimal pesoBruto, decimal tara, int cantidad,
         int cajasPorEntregar, string claveProd, DateTime fechaRecepcion)
@@ -85,14 +90,12 @@ public class CalculoService : ICalculoService
         if (cantidad > 0)
             kilos = ((pesoBruto - tara) / cantidad) * cajasPorEntregar;
 
-        // Ajuste por hielo: brócoli marino y variedades con hielo (8.5 kg por caja)
         var productosConHielo8_5 = new[] { "02002ML00", "02002BROFR", "02BRCO2025" };
         if (productosConHielo8_5.Contains(claveProd))
         {
             kilos += CalcularPesoHielo(8.5m, fechaRecepcion, DateTime.Now) * cajasPorEntregar;
         }
 
-        // Ajuste por hielo: variedad HEB (4 kg, una sola unidad — no por caja)
         if (claveProd == "02002BRHEB")
         {
             kilos += CalcularPesoHielo(4m, fechaRecepcion, DateTime.Now);
@@ -103,11 +106,6 @@ public class CalculoService : ICalculoService
 
     // ─── RN-005: Cálculo peso PTP ────────────────────────────────────────────
 
-    /// <summary>
-    /// Calcula el peso estimado para tarimas PTP.
-    /// Prioridad: PROD_PESO_VAR > ENV_PESO > tabla PesoProd.
-    /// Replica el bloque de cálculo de kilos PTP en Genera().
-    /// </summary>
     public decimal CalcularPesoPTP(
         decimal prodPesoVar, decimal envPeso, decimal pesoNeto,
         decimal numUnidades, int cajasEntregadas, string claveProd,
@@ -115,21 +113,18 @@ public class CalculoService : ICalculoService
     {
         decimal mpe;
 
-        // Prioridad 1: PROD_PESO_VAR
         if (prodPesoVar > 0)
             mpe = prodPesoVar * cajasEntregadas;
         else
             mpe = envPeso * cajasEntregadas;
 
-        // Prioridad 2: Catálogo PesoProd (sobreescribe si existe)
         if (pesoProdCatalogo > 0)
-            mpe = pesoProdCatalogo; // valor ya calculado externamente
+            mpe = pesoProdCatalogo;
 
         decimal kilos = 0;
         if (numUnidades > 0)
             kilos = ((pesoNeto / numUnidades) * cajasEntregadas) + (mpe * cajasEntregadas);
 
-        // Ajuste por hielo (mismo que PTC)
         var productosConHielo8_5 = new[] { "02002ML00", "02002BROFR", "02BRCO2025" };
         if (productosConHielo8_5.Contains(claveProd))
         {
@@ -148,8 +143,15 @@ public class CalculoService : ICalculoService
 
     /// <summary>
     /// Convierte una fecha al código de semana laboral del catálogo.
-    /// Busca en tb_cat_semanas donde fecha1 <= fecha <= fecha2.
-    /// Retorna: "SS-DDD" truncado a 5 chars. Ej: "14-LU", "07-VI"
+    /// 
+    /// CORRECCIÓN D-03: El sistema WinForms original corría con configuración regional
+    /// es-MX, por lo que ToString("ddd") producía abreviaturas en español:
+    /// LUN, MAR, MIÉ, JUE, VIE, SÁB, DOM.
+    /// 
+    /// .NET 8 por defecto usa InvariantCulture (inglés): MON, TUE, WED, etc.
+    /// Usamos CultureInfo("es-MX") explícitamente para replicar el comportamiento original.
+    /// 
+    /// Resultado truncado a 5 chars: "14-LU", "07-VI", "14-MI" (miércoles), "14-SÁ" (sábado)
     /// </summary>
     public string ObtenerLotePorFecha(DateTime fecha, IEnumerable<SemanaLaboral> semanas)
     {
@@ -158,7 +160,9 @@ public class CalculoService : ICalculoService
 
         if (semana == null) return "";
 
-        string lote = $"{semana.NumeroSemana}-{fecha.ToString("ddd").ToUpper()}";
+        // D-03 FIX: Usar CultureInfo("es-MX") igual que el WinForms original
+        string diaAbrev = fecha.ToString("ddd", CulturaOriginal).ToUpper();
+        string lote = $"{semana.NumeroSemana}-{diaAbrev}";
         return lote.Length >= 5 ? lote.Substring(0, 5) : lote;
     }
 
@@ -193,7 +197,6 @@ public class CalculoService : ICalculoService
 
             if (string.IsNullOrEmpty(mesNum)) return null;
 
-            // Si estamos en diciembre y el mes del lote es enero → año siguiente
             int anio = DateTime.Now.Year;
             if (DateTime.Now.Month == 12 && mesNum == "01") anio++;
 
@@ -204,10 +207,6 @@ public class CalculoService : ICalculoService
 
     // ─── RN-006: Exclusión de tarimas para conteo de ubicaciones ─────────────
 
-    /// <summary>
-    /// Determina si un producto/ubicación debe excluirse del conteo de tarimas ubicadas.
-    /// Excluye: ubicación "AGUI", o nombre contiene "CANAS", "PROCESO", "AJO".
-    /// </summary>
     public bool EsProductoExcluido(string nombreProducto, string ubicacion)
     {
         string nombre = (nombreProducto ?? "").ToUpper();
@@ -217,5 +216,38 @@ public class CalculoService : ICalculoService
             || nombre.Contains("CANAS")
             || nombre.Contains("PROCESO")
             || nombre.Contains("AJO");
+    }
+
+    // ─── Helpers internos ────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Formatea una fecha como cadena corta usando la cultura es-MX del sistema original.
+    /// Replica el comportamiento de DateTime.ToShortDateString() en Windows es-MX.
+    /// 
+    /// CORRECCIÓN D-02: El sistema original mostraba "14/03/2025", no "3/14/2025".
+    /// Usando formato explícito "dd/MM/yyyy" para independencia de cultura.
+    /// </summary>
+    public static string FormatearFechaCorta(DateTime fecha)
+    {
+        // Usando formato explícito para garantizar "dd/MM/yyyy" sin importar la cultura del hilo
+        // Este es el formato que ToShortDateString() devuelve con configuración regional México
+        return fecha.ToString("dd/MM/yyyy");
+    }
+
+    /// <summary>
+    /// Parsea una fecha en formato YYYYMMDD (usado en PTP fechacad).
+    /// CORRECCIÓN D-04: Usar ParseExact para evitar dependencia de cultura.
+    /// </summary>
+    public static DateTime? ParsearFechaYYYYMMDD(string fechaStr)
+    {
+        if (string.IsNullOrWhiteSpace(fechaStr) || fechaStr.Length != 8)
+            return null;
+
+        if (DateTime.TryParseExact(fechaStr, "yyyyMMdd",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None, out var dt))
+            return dt;
+
+        return null;
     }
 }

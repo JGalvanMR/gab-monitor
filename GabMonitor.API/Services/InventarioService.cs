@@ -1,4 +1,11 @@
 // GabMonitor.API/Services/InventarioService.cs
+// CORRECCIONES:
+//   D-02: FormatearFechaCorta() → "dd/MM/yyyy" en lugar de ToShortDateString()
+//   D-04: ParsearFechaYYYYMMDD() → DateTime.ParseExact para fechacad PTP
+//   D-05/D-06: Manejo seguro de FECHA_CAD como DateTime O string desde SQL Server
+//   D-08: Trim de cveProd al almacenar
+//   D-09: Trim de nombreProd para comparación de cambio de producto
+
 using GabMonitor.API.Models.Domain;
 using GabMonitor.API.Repositories.Interfaces;
 using GabMonitor.API.Services.Interfaces;
@@ -20,10 +27,6 @@ public class InventarioService : IInventarioService
         _calc = calc;
     }
 
-    /// <summary>
-    /// Genera el inventario consolidado completo.
-    /// Es la réplica exacta de Form1.Genera() del sistema WinForms.
-    /// </summary>
     public async Task<(List<ItemInventario> Items, MetricasInventario Metricas)>
         GenerarInventarioConsolidadoAsync()
     {
@@ -53,7 +56,6 @@ public class InventarioService : IInventarioService
         var trazPTC   = (await _repo.ObtenerTrazabilidadPTCAsync()).ToList();
         var etiqFinal = (await _repo.ObtenerEtiquetasFinalesPTPAsync()).ToList();
 
-        // ── Contadores de ubicaciones (RN-006) ────────────────────────────────
         int totalUbicado = 0, totalTarimas = 0;
         int totg = 0;
 
@@ -63,7 +65,6 @@ public class InventarioService : IInventarioService
         ProcesarBloquePTP(etiqFinal, embarques, splits, ptpDia, teorico, presplit,
             semanas, pesosCat, resultado, ref totalUbicado, ref totalTarimas, ref totg);
 
-        // Total General (Conse=4)
         resultado.Add(new ItemInventario
         {
             Nombre   = "TOTAL GENERAL",
@@ -74,7 +75,6 @@ public class InventarioService : IInventarioService
             FechaCad = "99999999"
         });
 
-        // Ordenar: replica DefaultView.Sort = "Prod, Conse, FechaCad ASC"
         resultado = resultado
             .OrderBy(i => i.Prod)
             .ThenBy(i => i.Conse)
@@ -102,11 +102,13 @@ public class InventarioService : IInventarioService
 
         foreach (dynamic row in datos)
         {
-            string nombreProd = (string)(row.PROD_NOMBRE ?? "");
-            string cveProd    = (string)(row.PROD_CLAVE  ?? "");
-            string ubicacion  = ((string)(row.UBICACION  ?? "")).Trim();
+            // D-08/D-09 FIX: Trim consistente para nombre y clave del producto
+            string nombreProd = ObtenerStringSeguro(row.PROD_NOMBRE).Trim();
+            string cveProd    = ObtenerStringSeguro(row.PROD_CLAVE).Trim();
+            string ubicacion  = ObtenerStringSeguro(row.UBICACION).Trim();
 
-            if (_calc.EsProductoExcluido(nombreProd, ubicacion)) { /* excluido */ }
+            // RN-006: Conteo de ubicaciones
+            if (_calc.EsProductoExcluido(nombreProd, ubicacion)) { /* excluido del conteo */ }
             else
             {
                 totalTarimas++;
@@ -131,26 +133,26 @@ public class InventarioService : IInventarioService
             int disponibles = etiqueta - surtido;
             if (disponibles <= 0) continue;
 
-            // ── Fecha caducidad y días (sin desestructuración de dynamic) ─────
+            // D-05 FIX: FECHA_CAD puede ser DateTime (columna DATE) o string (columna VARCHAR)
+            // Manejo seguro de ambos tipos
             DateTime fechaCad;
             int      dias;
             string   fechaCadStr;
             CalcularFechaDiasPTC(row, nombreProd, out fechaCad, out dias, out fechaCadStr);
 
-			string tarima = (row.TARIMA?.ToString() ?? "").Trim();
-            string recibo = (string)(row.RECIBO     ?? "");
+            string tarima = ObtenerStringSeguro(row.TARIMA).Trim();
+            string recibo = ObtenerStringSeguro(row.RECIBO).Trim();
             int presplitCajas = ObtenerPresplit(presplit, recibo, cveProd, tarima);
             string pesoStr = CalcularPesoEstimadoPTC(row, disponibles, cveProd);
 
-            string fechaCadSort = !string.IsNullOrWhiteSpace((string)(row.FECHA_CAD ?? ""))
-                ? Convert.ToDateTime((object)row.FECHA_CAD).ToString("yyyyMMdd")
-                : fechaCad.ToString("yyyyMMdd");
+            // Para sort: usar fecha explícita si existe, si no la calculada
+            string fechaCadSort = ObtenerFechaCadSort(row.FECHA_CAD, fechaCad);
 
             resultado.Add(new ItemInventario
             {
                 Nombre           = $"{recibo}-{tarima}",
-                FechaElaboracion = (string)(row.PTI_FECHA?.ToString() ?? ""),
-                Lote             = (string)(row.LOTE ?? ""),
+                FechaElaboracion = ObtenerStringSeguro(row.PTI_FECHA?.ToString()),
+                Lote             = ObtenerStringSeguro(row.LOTE),
                 FecCad           = fechaCadStr,
                 Dias             = dias,
                 Existencia       = etiqueta,
@@ -164,7 +166,7 @@ public class InventarioService : IInventarioService
                 Tarima           = tarima,
                 Presplit         = presplitCajas,
                 PesoEstimado     = pesoStr,
-                PreAutorizado = (row.preautorizado?.ToString() ?? "").Trim()
+                PreAutorizado    = ObtenerStringSeguro(row.preautorizado?.ToString()).Trim()
             });
 
             totp += disponibles;
@@ -192,9 +194,10 @@ public class InventarioService : IInventarioService
 
         foreach (dynamic row in datos)
         {
-            string nombreProd = (string)(row.PROD_NOMBRE ?? "");
-            string cveProd    = (string)(row.CVE_PROD    ?? "");
-            string ubicacion  = ((string)(row.UBICACION  ?? "")).Trim();
+            // D-08/D-09 FIX: Trim consistente
+            string nombreProd = ObtenerStringSeguro(row.PROD_NOMBRE).Trim();
+            string cveProd    = ObtenerStringSeguro(row.CVE_PROD).Trim();
+            string ubicacion  = ObtenerStringSeguro(row.UBICACION).Trim();
 
             if (!_calc.EsProductoExcluido(nombreProd, ubicacion))
             {
@@ -220,19 +223,19 @@ public class InventarioService : IInventarioService
             int disponibles = numCajas - cajasSur;
             if (disponibles <= 0) continue;
 
-            // ── Fecha caducidad y días (sin desestructuración de dynamic) ─────
+            // D-06 FIX: fechacad puede ser DateTime o string
             DateTime fechaCad;
             int      dias;
             string   fechaCadStr;
             CalcularFechaDiasPTP(row, nombreProd, out fechaCad, out dias, out fechaCadStr);
 
-			string tarima = (row.TARIMA?.ToString() ?? "").Trim();
-			string folio = (row.FOLIO?.ToString() ?? "");
+            string tarima = ObtenerStringSeguro(row.TARIMA).Trim();
+            string folio  = ObtenerStringSeguro(row.FOLIO?.ToString()).Trim();
             int presplitCajas = ObtenerPresplit(presplit, folio, cveProd, tarima);
 
             decimal pesoCatalogo = 0;
             var pp = pesosCat.FirstOrDefault(p =>
-                (string)(p.prod_clave ?? "") == cveProd);
+                ObtenerStringSeguro(p.prod_clave).Trim() == cveProd);
             if (pp != null)
                 pesoCatalogo = Convert.ToDecimal(pp.env_peso ?? 0);
 
@@ -244,7 +247,7 @@ public class InventarioService : IInventarioService
             resultado.Add(new ItemInventario
             {
                 Nombre           = $"{folio}-{tarima}",
-                FechaElaboracion = (string)(row.FECHA?.ToString() ?? ""),
+                FechaElaboracion = ObtenerStringSeguro(row.FECHA?.ToString()),
                 Lote             = lote,
                 FecCad           = fechaCadStr,
                 Dias             = dias,
@@ -259,7 +262,7 @@ public class InventarioService : IInventarioService
                 Tarima           = tarima,
                 Presplit         = presplitCajas,
                 PesoEstimado     = pesoStr,
-                PreAutorizado = (row.preautorizado?.ToString() ?? "").Trim()
+                PreAutorizado    = ObtenerStringSeguro(row.preautorizado?.ToString()).Trim()
             });
 
             totp += disponibles;
@@ -271,50 +274,73 @@ public class InventarioService : IInventarioService
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // CÁLCULO DE FECHA/DÍAS — usa out params en lugar de tuplas (evita dynamic deconstruct)
+    // CÁLCULO DE FECHA/DÍAS
     // ─────────────────────────────────────────────────────────────────────────
 
     private void CalcularFechaDiasPTC(
         dynamic row, string nombreProd,
         out DateTime fechaCad, out int dias, out string fechaCadStr)
     {
-        string fechaCadRaw = (string)(row.FECHA_CAD ?? "");
+        // D-05 FIX: FECHA_CAD puede ser DateTime (SQL DATE) o string (SQL VARCHAR)
+        // El sistema original usaba DataRow que lo manejaba transparentemente.
+        // Dapper devuelve DateTime directamente para columnas DATE/DATETIME.
+        object? fechaCadObj = row.FECHA_CAD;
 
-        if (!string.IsNullOrWhiteSpace(fechaCadRaw))
+        if (fechaCadObj != null)
         {
-            fechaCad    = Convert.ToDateTime((object)row.FECHA_CAD);
+            // Puede ser DateTime o string según el tipo de columna en BD
+            fechaCad = fechaCadObj is DateTime dt
+                ? dt
+                : Convert.ToDateTime(fechaCadObj);
+
             dias        = _calc.CalcularDiasHastaCaducidad(fechaCad);
-            fechaCadStr = fechaCad.ToShortDateString();
+            // D-02 FIX: Formato explícito dd/MM/yyyy igual que es-MX
+            fechaCadStr = CalculoService.FormatearFechaCorta(fechaCad);
             return;
         }
 
+        // Sin fecha explícita → calcular por tipo de producto (RN-001)
         DateTime fechaBase = Convert.ToDateTime((object)(row.PTI_FECHA ?? DateTime.Today));
         fechaCad    = _calc.CalcularFechaCaducidadImplicita(nombreProd, fechaBase);
         dias        = _calc.CalcularDiasHastaCaducidad(fechaCad);
-        fechaCadStr = fechaCad.ToShortDateString();
+        fechaCadStr = CalculoService.FormatearFechaCorta(fechaCad);
     }
 
     private void CalcularFechaDiasPTP(
         dynamic row, string nombreProd,
         out DateTime fechaCad, out int dias, out string fechaCadStr)
     {
-        string numLote     = ((string)(row.NUM_LOTE  ?? "")).Trim();
-        string fechaCadPTP = ((string)(row.fechacad  ?? "")).Trim();
+        string numLote     = ObtenerStringSeguro(row.NUM_LOTE).Trim();
+        object? fechaCadObj = row.fechacad;
 
-        // Prioridad 1: fechacad explícita formato YYYYMMDD
-        if (!string.IsNullOrEmpty(fechaCadPTP) && fechaCadPTP.Length == 8)
+        // Prioridad 1: fechacad explícita
+        if (fechaCadObj != null)
         {
-            try
+            DateTime dtPTP;
+            if (fechaCadObj is DateTime dtDirect)
             {
-                string mfeca = $"{fechaCadPTP.Substring(6, 2)}/{fechaCadPTP.Substring(4, 2)}/{fechaCadPTP.Substring(0, 4)}";
-                fechaCad    = Convert.ToDateTime(mfeca);
-                dias        = _calc.CalcularDiasHastaCaducidad(fechaCad);
-                fechaCadStr = fechaCad.ToShortDateString();
-                return;
+                // D-06 FIX: Si es DateTime directo (columna DATE en BD)
+                dtPTP = dtDirect;
             }
-            catch { }
+            else
+            {
+                // Es string en formato YYYYMMDD
+                string fechaCadStr8 = fechaCadObj.ToString()?.Trim() ?? "";
+                // D-04 FIX: Usar ParseExact con formato explícito
+                var parsed = CalculoService.ParsearFechaYYYYMMDD(fechaCadStr8);
+                if (parsed.HasValue)
+                {
+                    dtPTP = parsed.Value;
+                }
+                else goto FallThrough;
+            }
+            fechaCad    = dtPTP;
+            dias        = _calc.CalcularDiasHastaCaducidad(fechaCad);
+            fechaCadStr = CalculoService.FormatearFechaCorta(fechaCad);
+            return;
         }
 
+        FallThrough:
         // Prioridad 2: parsear del NUM_LOTE (RN-009)
         if (!string.IsNullOrEmpty(numLote))
         {
@@ -323,7 +349,7 @@ public class InventarioService : IInventarioService
             {
                 fechaCad    = dtLote.Value;
                 dias        = _calc.CalcularDiasHastaCaducidad(fechaCad);
-                fechaCadStr = fechaCad.ToShortDateString();
+                fechaCadStr = CalculoService.FormatearFechaCorta(fechaCad);
                 return;
             }
         }
@@ -332,12 +358,44 @@ public class InventarioService : IInventarioService
         DateTime fechaBase = Convert.ToDateTime((object)(row.FECHA ?? DateTime.Today));
         fechaCad    = _calc.CalcularFechaCaducidadImplicita(nombreProd, fechaBase);
         dias        = _calc.CalcularDiasHastaCaducidad(fechaCad);
-        fechaCadStr = fechaCad.ToShortDateString();
+        fechaCadStr = CalculoService.FormatearFechaCorta(fechaCad);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// D-05/D-06 FIX: Extrae string de manera segura desde dynamic/object.
+    /// Maneja tanto string como DateTime y otros tipos.
+    /// </summary>
+    private static string ObtenerStringSeguro(object? valor)
+    {
+        if (valor == null) return "";
+        if (valor is string s) return s;
+        return valor.ToString() ?? "";
+    }
+
+    /// <summary>
+    /// Obtiene el valor de FechaCad para sorting en formato yyyyMMdd.
+    /// Si FECHA_CAD es null/vacío, usa la fecha calculada.
+    /// </summary>
+    private static string ObtenerFechaCadSort(object? fechaCadObj, DateTime fechaCadCalculada)
+    {
+        if (fechaCadObj == null) return fechaCadCalculada.ToString("yyyyMMdd");
+
+        try
+        {
+            DateTime dt = fechaCadObj is DateTime dtDirect
+                ? dtDirect
+                : Convert.ToDateTime(fechaCadObj);
+            return dt.ToString("yyyyMMdd");
+        }
+        catch
+        {
+            return fechaCadCalculada.ToString("yyyyMMdd");
+        }
+    }
 
     private static ItemInventario CrearFilaHeader(string nombre, string cvePro) =>
         new ItemInventario
@@ -371,9 +429,9 @@ public class InventarioService : IInventarioService
         try
         {
             decimal kilos = _calc.CalcularPesoPTP(
-                Convert.ToDecimal(row.PROD_PESO_VAR   ?? 0),
-                Convert.ToDecimal(row.ENV_PESO        ?? 0),
-                Convert.ToDecimal(row.HRP_PESO_NETO   ?? 0),
+                Convert.ToDecimal(row.PROD_PESO_VAR    ?? 0),
+                Convert.ToDecimal(row.ENV_PESO         ?? 0),
+                Convert.ToDecimal(row.HRP_PESO_NETO    ?? 0),
                 Convert.ToDecimal(row.HRP_NUM_UNIDADES ?? 1),
                 disponibles, cveProd,
                 Convert.ToDateTime((object)(row.hrp_fecha ?? DateTime.Today)),
@@ -394,9 +452,9 @@ public class InventarioService : IInventarioService
     {
         return presplit
             .Where(p =>
-                ((string)(p.Eti_Recibo  ?? "")).Trim() == recibo.Trim() &&
-                ((string)(p.Eti_Producto ?? "")).Trim() == prod.Trim()   &&
-                ((string)(p.Eti_TarIni  ?? "")).Trim() == tarima.Trim())
+                ObtenerStringSeguro(p.Eti_Recibo).Trim()  == recibo.Trim() &&
+                ObtenerStringSeguro(p.Eti_Producto).Trim() == prod.Trim()   &&
+                ObtenerStringSeguro(p.Eti_TarIni).Trim()   == tarima.Trim())
             .Sum(p => Convert.ToInt32(p.CAJAS ?? 0));
     }
 
@@ -408,7 +466,7 @@ public class InventarioService : IInventarioService
         var (teo, fisi) = ObtenerTeoricoFisico(teorico, nprod);
         int surti = ObtenerSurtido(embarques, splits, nprod);
         int tott  = ptcDia
-            .Where(r => ((string)(r.PROD_CLAVE ?? "")).Trim() == nprod.Trim())
+            .Where(r => ObtenerStringSeguro(r.PROD_CLAVE).Trim() == nprod.Trim())
             .Sum(r => Convert.ToInt32(r.CAJAS ?? 0));
 
         resultado.Add(new ItemInventario
@@ -433,7 +491,7 @@ public class InventarioService : IInventarioService
         var (teo, fisi) = ObtenerTeoricoFisico(teorico, nprod);
         int surti = ObtenerSurtido(embarques, splits, nprod);
         int tott  = ptpDia
-            .Where(r => ((string)(r.CVE_PROD ?? "")).Trim() == nprod.Trim())
+            .Where(r => ObtenerStringSeguro(r.CVE_PROD).Trim() == nprod.Trim())
             .Sum(r => Convert.ToInt32(r.CAJAS ?? 0));
 
         resultado.Add(new ItemInventario
@@ -454,7 +512,7 @@ public class InventarioService : IInventarioService
         List<dynamic> teorico, string cveProd)
     {
         var row = teorico.FirstOrDefault(r =>
-            ((string)(r.PROD_CLAVE ?? "")).Trim() == cveProd.Trim());
+            ObtenerStringSeguro(r.PROD_CLAVE).Trim() == cveProd.Trim());
         if (row == null) return (0, 0);
         return (Convert.ToInt32(row.INV_TEORICO ?? 0),
                 Convert.ToInt32(row.INV_FISICO  ?? 0));
@@ -464,10 +522,10 @@ public class InventarioService : IInventarioService
         List<dynamic> embarques, List<dynamic> splits, string cveProd)
     {
         int de = embarques
-            .Where(r => ((string)(r.PROD_CLAVE ?? "")).Trim() == cveProd.Trim())
+            .Where(r => ObtenerStringSeguro(r.PROD_CLAVE).Trim() == cveProd.Trim())
             .Sum(r => Convert.ToInt32(r.CAJAS ?? 0));
         int ds = splits
-            .Where(r => ((string)(r.PROD_CLAVE ?? "")).Trim() == cveProd.Trim())
+            .Where(r => ObtenerStringSeguro(r.PROD_CLAVE).Trim() == cveProd.Trim())
             .Sum(r => Convert.ToInt32(r.CAJAS ?? 0));
         return de + ds;
     }
@@ -487,9 +545,9 @@ public class InventarioService : IInventarioService
         foreach (var t in totales)
         {
             metricas.TotalProductos++;
-            if (t.Dias      == t.Cantidad)  metricas.ProductosConTeoricoOk++;
+            if (t.Dias       == t.Cantidad)  metricas.ProductosConTeoricoOk++;
             if (t.Existencia == t.Cantidad)  metricas.ProductosConFisicoOk++;
-            if (t.Dias      == t.Existencia) metricas.TeoVsFisicoCoincide++;
+            if (t.Dias       == t.Existencia) metricas.TeoVsFisicoCoincide++;
         }
 
         metricas.TarimasUbicadas = totalUbicado;

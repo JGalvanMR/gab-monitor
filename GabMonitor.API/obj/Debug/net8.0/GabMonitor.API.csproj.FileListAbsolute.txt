@@ -71,3 +71,4 @@ C:\GitHub\gab-monitor\GabMonitor.API\obj\Debug\net8.0\refint\GabMonitor.API.dll
 C:\GitHub\gab-monitor\GabMonitor.API\obj\Debug\net8.0\GabMonitor.API.pdb
 C:\GitHub\gab-monitor\GabMonitor.API\obj\Debug\net8.0\GabMonitor.API.genruntimeconfig.cache
 C:\GitHub\gab-monitor\GabMonitor.API\obj\Debug\net8.0\ref\GabMonitor.API.dll
+C:\GitHub\gab-monitor\GabMonitor.API\obj\Debug\net8.0\GabMonitor.API.sourcelink.json

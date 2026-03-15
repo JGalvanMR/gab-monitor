@@ -1,6 +1,10 @@
 // src/hooks/useInventario.ts
-import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState, useCallback } from 'react';
+// CORRECCIÓN D-07: Eliminar importaciones duplicadas de 'react'
+// El archivo original importaba useEffect dos veces, causando error de compilación TypeScript.
+
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import * as signalR from '@microsoft/signalr';
 import { inventarioApi } from '../api/inventarioApi';
 import type { FiltroInventario } from '../types/inventario.types';
 
@@ -21,17 +25,12 @@ export function useInventario(filtro: FiltroInventario, buscar: string) {
   // Cuenta regresiva visual — equivalente a LblAct en WinForms (RN-010)
   useEffect(() => {
     const timer = setInterval(() => {
-      setSegundos(prev => {
-        if (prev <= 1) {
-          return INTERVALO_REFRESCO_SEG;
-        }
-        return prev - 1;
-      });
+      setSegundos(prev => (prev <= 1 ? INTERVALO_REFRESCO_SEG : prev - 1));
     }, 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Reiniciar contador cuando se hace un fetch
+  // Reiniciar contador cuando termina un fetch
   useEffect(() => {
     if (!isFetching) {
       setSegundos(INTERVALO_REFRESCO_SEG);
@@ -55,31 +54,23 @@ export function useInventario(filtro: FiltroInventario, buscar: string) {
 
 // ─── Hook para SignalR (refresco en tiempo real) ───────────────────────────
 
-import { useEffect as useEffectSR, useRef } from 'react';
-import * as signalR from '@microsoft/signalr';
-import { useQueryClient } from '@tanstack/react-query';
-
 export function useSignalRInventario() {
   const queryClient = useQueryClient();
-  const connRef = useRef<signalR.HubConnection | null>(null);
 
-  useEffectSR(() => {
+  useEffect(() => {
     const connection = new signalR.HubConnectionBuilder()
       .withUrl('/hubs/inventario')
       .withAutomaticReconnect()
       .configureLogging(signalR.LogLevel.Warning)
       .build();
 
-    connRef.current = connection;
-
     connection.on('InventarioActualizado', () => {
-      // Invalida y refresca automáticamente cuando el backend notifica
       queryClient.invalidateQueries({ queryKey: ['inventario'] });
     });
 
     connection
       .start()
-      .catch(err => console.warn('SignalR no disponible (modo polling):', err));
+      .catch(err => console.warn('SignalR no disponible (modo polling activo):', err));
 
     return () => {
       connection.stop();

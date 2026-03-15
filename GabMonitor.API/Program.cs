@@ -1,9 +1,19 @@
 // GabMonitor.API/Program.cs
+// CORRECCIÓN D-01: Configurar cultura es-MX globalmente para paridad con WinForms original
+using System.Globalization;
 using GabMonitor.API.Hubs;
 using GabMonitor.API.Repositories;
 using GabMonitor.API.Repositories.Interfaces;
 using GabMonitor.API.Services;
 using GabMonitor.API.Services.Interfaces;
+
+// ── D-01 CORRECCIÓN CRÍTICA: Cultura es-MX igual que el sistema WinForms original ──
+// El WinForms original corría en Windows con configuración regional de México.
+// .NET 8 por defecto usa InvariantCulture, lo que produce fechas en formato
+// incorrecto ("3/14/2025" vs "14/03/2025") y nombres de día en inglés ("FRI" vs "VIE").
+var culturaMexico = new CultureInfo("es-MX");
+CultureInfo.DefaultThreadCurrentCulture   = culturaMexico;
+CultureInfo.DefaultThreadCurrentUICulture = culturaMexico;
 
 var builder = WebApplication.CreateBuilder(args);
 

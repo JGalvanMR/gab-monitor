@@ -1,0 +1,35 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GabMonitor.API", "GabMonitor.API\GabMonitor.API.csproj", "{076ADF0E-23A4-A93B-12D0-8817AE67F554}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GabMonitor.Test", "GabMonitor.Test", "{59A1A0AE-9F75-CF86-E929-A71979DBD931}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GabMonitor.Tests", "GabMonitor.Test\GabMonitor.Tests.csproj", "{4A0AF4F0-76C6-67BA-6FC8-134545EE311F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{076ADF0E-23A4-A93B-12D0-8817AE67F554}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{076ADF0E-23A4-A93B-12D0-8817AE67F554}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{076ADF0E-23A4-A93B-12D0-8817AE67F554}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{076ADF0E-23A4-A93B-12D0-8817AE67F554}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A0AF4F0-76C6-67BA-6FC8-134545EE311F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A0AF4F0-76C6-67BA-6FC8-134545EE311F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A0AF4F0-76C6-67BA-6FC8-134545EE311F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A0AF4F0-76C6-67BA-6FC8-134545EE311F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4A0AF4F0-76C6-67BA-6FC8-134545EE311F} = {59A1A0AE-9F75-CF86-E929-A71979DBD931}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {74775825-7DF1-47D5-BF75-242502EE5575}
+	EndGlobalSection
+EndGlobal

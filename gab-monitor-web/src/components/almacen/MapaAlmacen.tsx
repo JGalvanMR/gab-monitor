@@ -1,9 +1,8 @@
 // src/components/almacen/MapaAlmacen.tsx
+// CORRECCIÓN D-13: Eliminar variable `modulos` declarada pero nunca usada
+
 import { useCallback } from 'react';
 import type { PosicionAlmacen } from '../../types/inventario.types';
-
-// ─── Definición completa de posiciones del almacén ───────────────────────────
-// Extraída del diseño de paneles en FrmLocaliza/FrmInvProd del WinForms original
 
 const generar = (
   prefijo: string,
@@ -28,41 +27,23 @@ const generar = (
   }));
 
 export const POSICIONES_ALMACEN: PosicionAlmacen[] = [
-  // Módulo 1 (1101-1110) - vertical
   ...generar('110', 1, 10,  15, 20, 16, 28, 14, '1'),
-  // Módulo 2 (1201-1214) - vertical
   ...generar('120', 1, 14,  58, 20, 16, 28, 14, '2'),
-  // Módulo 3 (1301-1305) - horizontal
   ...generar('130', 1, 5,   15, 260, 14, 28, 14, '3', true),
-  // Módulo 4 (1401-1424) - vertical
   ...generar('140', 1, 24, 180, 20, 14, 34, 12, '4'),
-  // Módulo 5 (2501-2502) - horizontal
   ...generar('250', 1, 2,  280, 20, 36, 30, 14, '5', true),
-  // Módulo 6 (2601-2602) - horizontal
   ...generar('260', 1, 2,  280, 50, 36, 30, 14, '6', true),
-  // Módulo 7 (2701-2706) - vertical
   ...generar('270', 1, 6,  340, 20, 16, 30, 14, '7'),
-  // Módulos 2x - columna A (2101-2103)
   ...generar('210', 1, 3,  400, 20, 16, 30, 14, '2x'),
-  // Módulos 2x - columna B (2201-2207)
   ...generar('220', 1, 7,  440, 20, 16, 30, 14, '2x'),
-  // Módulos 2x - columna C (2301-2304)
   ...generar('230', 1, 4,  480, 20, 16, 30, 14, '2x'),
-  // Módulo especial (4101-4111) - vertical
   ...generar('410', 1, 11, 540, 20, 16, 30, 14, 'esp'),
-  // Pasillos (estáticos como referencia)
 ];
 
-// ─── Componente principal ─────────────────────────────────────────────────────
-
 interface Props {
-  /** Posición a resaltar en verde brillante (tarima encontrada) */
   posicionResaltada?: string;
-  /** Posiciones ocupadas con su cantidad { codigo: { cantidad, producto } } */
   posicionesOcupadas?: Record<string, { cantidad: number; producto?: string }>;
-  /** Callback al hacer clic en una posición (modo selección) */
   onPosicionClick?: (posicionId: string) => void;
-  /** Si true, no permite clicks (solo visualización) */
   soloLectura?: boolean;
 }
 
@@ -85,9 +66,6 @@ export function MapaAlmacen({
   const obtenerColorTexto = (posId: string): string =>
     posId === posicionResaltada ? '#000' : '#EEE';
 
-  // Agrupar posiciones por módulo para las etiquetas
-  const modulos = [...new Set(POSICIONES_ALMACEN.map(p => p.modulo))];
-
   return (
     <div className="bg-gray-900 p-3 rounded-lg">
       <h3 className="text-white text-sm font-bold text-center mb-2">
@@ -101,7 +79,6 @@ export function MapaAlmacen({
           style={{ maxHeight: '320px', minWidth: '400px' }}
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Etiquetas de módulos */}
           <text x="15"  y="12" fill="#60A5FA" fontSize="7" fontWeight="bold">M1</text>
           <text x="58"  y="12" fill="#60A5FA" fontSize="7" fontWeight="bold">M2</text>
           <text x="15"  y="252" fill="#60A5FA" fontSize="7" fontWeight="bold">M3</text>
@@ -111,7 +88,6 @@ export function MapaAlmacen({
           <text x="400" y="12" fill="#60A5FA" fontSize="7" fontWeight="bold">2x</text>
           <text x="540" y="12" fill="#60A5FA" fontSize="7" fontWeight="bold">ESP</text>
 
-          {/* Renderizar posiciones */}
           {POSICIONES_ALMACEN.map(pos => (
             <g key={pos.id}>
               <rect
@@ -138,7 +114,6 @@ export function MapaAlmacen({
               >
                 {pos.label}
               </text>
-              {/* Indicador de cantidad si está ocupada */}
               {posicionesOcupadas[pos.id] && (
                 <text
                   x={pos.x + pos.ancho - 1}
@@ -157,7 +132,6 @@ export function MapaAlmacen({
         </svg>
       </div>
 
-      {/* Leyenda */}
       <div className="flex justify-center gap-4 mt-2 text-xs text-gray-300 flex-wrap">
         <span className="flex items-center gap-1">
           <span className="w-3 h-3 rounded-sm bg-green-400 inline-block" />
