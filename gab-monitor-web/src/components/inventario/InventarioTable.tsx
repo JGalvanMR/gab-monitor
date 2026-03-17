@@ -16,9 +16,9 @@
 import type { ItemInventario } from '../../types/inventario.types';
 
 export interface AccionesDetalle {
-  onAbrirDetalle:     (item: ItemInventario, tipo: 'embarque' | 'presplit') => void;
-  onAbrirRecibo:      (item: ItemInventario) => void;
-  onAbrirMapa:        (item: ItemInventario) => void;
+  onAbrirDetalle: (item: ItemInventario, tipo: 'embarque' | 'presplit') => void;
+  onAbrirRecibo: (item: ItemInventario) => void;
+  onAbrirMapa: (item: ItemInventario) => void;
   onAbrirUbicaManual: (item: ItemInventario) => void;
 }
 
@@ -31,11 +31,11 @@ interface Props extends AccionesDetalle {
 }
 
 const COLOR_CLASES: Record<string, string> = {
-  'expiry-red':       'bg-red-700 hover:bg-red-600 text-white',
-  'expiry-orange':    'bg-orange-600 hover:bg-orange-500 text-white',
-  'expiry-yellow':    'bg-yellow-400 hover:bg-yellow-300 text-gray-900',
-  'expiry-green':     'bg-green-700 hover:bg-green-600 text-white',
-  'preaut-trailer':   'bg-purple-700 hover:bg-purple-600 text-white',
+  'expiry-red': 'bg-red-700 hover:bg-red-600 text-white',
+  'expiry-orange': 'bg-orange-600 hover:bg-orange-500 text-white',
+  'expiry-yellow': 'bg-yellow-400 hover:bg-yellow-300 text-gray-900',
+  'expiry-green': 'bg-green-700 hover:bg-green-600 text-white',
+  'preaut-trailer': 'bg-purple-700 hover:bg-purple-600 text-white',
   'preaut-camioneta': 'bg-blue-700 hover:bg-blue-600 text-white',
 };
 
@@ -55,18 +55,18 @@ export function InventarioTable({
             <tr>
               {modoAutorizacion && <th className="w-7 px-1 py-1.5 border-b border-gray-600">AUT</th>}
               <th className="px-2 py-1.5 text-left border-b border-gray-600 min-w-[220px]"
-                  title="Doble clic: ver info del recibo">FOLIO - TARIMA</th>
+                title="Doble clic: ver info del recibo">FOLIO - TARIMA</th>
               <th className="px-2 py-1.5 border-b border-gray-600 w-20">FECHA ELA</th>
               <th className="px-2 py-1.5 border-b border-gray-600 w-10">LOTE</th>
               <th className="px-2 py-1.5 border-b border-gray-600 w-20">FECHA CAD</th>
               <th className="px-2 py-1.5 text-right border-b border-gray-600 w-14">DIAS/TEO</th>
               <th className="px-2 py-1.5 text-right border-b border-gray-600 w-14">EXIST/FIS</th>
               <th className="px-2 py-1.5 text-right border-b border-gray-600 w-14 font-bold"
-                  title="Doble clic: ver detalle de embarques">CANT ▾</th>
+                title="Doble clic: ver detalle de embarques">CANT ▾</th>
               <th className="px-2 py-1.5 border-b border-gray-600 w-16"
-                  title="Doble clic: ver en mapa / asignar ubicación">UBICACIÓN ▾</th>
+                title="Doble clic: ver en mapa / asignar ubicación">UBICACIÓN ▾</th>
               <th className="px-2 py-1.5 text-right border-b border-gray-600 w-10"
-                  title="Doble clic: ver detalle pre-split">PRESPL ▾</th>
+                title="Doble clic: ver detalle pre-split">PRESPL ▾</th>
               <th className="px-2 py-1.5 text-right border-b border-gray-600 w-18">PESO EST</th>
             </tr>
           </thead>
@@ -155,12 +155,12 @@ function FilaInventario({
 
   // ── Detalle de tarima (Conse=2) ────────────────────────────────────────────
   const colorClass = COLOR_CLASES[item.colorClase] ?? 'bg-green-700 hover:bg-green-600 text-white';
-  const selClass   = seleccionada ? 'ring-2 ring-white ring-inset' : '';
-  const tieneUbic  = item.ubicacion.trim().length > 0;
+  const selClass = seleccionada ? 'ring-2 ring-white ring-inset' : '';
+  const tieneUbic = item.ubicacion.trim().length > 0;
 
   return (
     <tr className={`${colorClass} ${selClass} cursor-pointer transition-colors`}
-        onClick={onSeleccionar}>
+      onClick={onSeleccionar}>
 
       {modoAutorizacion && (
         <td className="text-center px-1 border-b border-black/10">
@@ -174,8 +174,8 @@ function FilaInventario({
            Doble clic → ReciboPTC(recibo, prod) o ReciboPTP(nombre, prod, cvePro)
            Equivale a: e.ColumnIndex == 0 en WinForms */}
       <td className="px-2 py-0.5 font-mono border-b border-black/10 hover:underline"
-          title={`Doble clic: ver info del recibo (${item.tipo})`}
-          onDoubleClick={e => { e.stopPropagation(); onAbrirRecibo(item); }}>
+        title={`Doble clic: ver info del recibo (${item.tipo})`}
+        onDoubleClick={e => { e.stopPropagation(); onAbrirRecibo(item); }}>
         {item.nombre}
         {item.tipo && <span className="ml-1 opacity-50 text-xs">[{item.tipo}]</span>}
       </td>
@@ -189,7 +189,7 @@ function FilaInventario({
       </td>
 
       <td className="px-2 py-0.5 text-center border-b border-black/10 tabular-nums"
-          title={`Días restantes: ${item.dias}`}>
+        title={`Días restantes: ${item.dias}`}>
         {item.fecCad}
       </td>
 
@@ -206,8 +206,8 @@ function FilaInventario({
            WinForms: e.ColumnIndex == 7 AND conse == "2" */}
       <td className="px-2 py-0.5 text-right font-mono font-bold border-b border-black/10 tabular-nums
                      hover:underline cursor-pointer"
-          title="Doble clic: ver historial de embarques (FrmConsDet)"
-          onDoubleClick={e => { e.stopPropagation(); onAbrirDetalle(item, 'embarque'); }}>
+        title="Doble clic: ver historial de embarques (FrmConsDet)"
+        onDoubleClick={e => { e.stopPropagation(); onAbrirDetalle(item, 'embarque'); }}>
         {item.cantidad.toLocaleString()}
       </td>
 
@@ -215,29 +215,27 @@ function FilaInventario({
            Con ubicación  → FrmLocaliza (mapa resaltado)
            Sin ubicación  → FrmUbicaManual (asignar)
            WinForms: e.ColumnIndex == 13 AND conse == "2" */}
-      <td className={`px-2 py-0.5 text-center border-b border-black/10 ${
-                     tieneUbic ? 'hover:underline cursor-pointer' : 'hover:bg-white/10 cursor-pointer'}`}
-          title={tieneUbic
-            ? `Doble clic: ver en mapa (${item.ubicacion}) — FrmLocaliza`
-            : 'Doble clic: asignar ubicación — FrmUbicaManual'}
-          onDoubleClick={e => {
-            e.stopPropagation();
-            if (tieneUbic) onAbrirMapa(item);
-            else           onAbrirUbicaManual(item);
-          }}>
+      <td className={`px-2 py-0.5 text-center border-b border-black/10 ${tieneUbic ? 'hover:underline cursor-pointer' : 'hover:bg-white/10 cursor-pointer'}`}
+        title={tieneUbic
+          ? `Doble clic: ver en mapa (${item.ubicacion}) — FrmLocaliza`
+          : 'Doble clic: asignar ubicación — FrmUbicaManual'}
+        onDoubleClick={e => {
+          e.stopPropagation();
+          if (tieneUbic) onAbrirMapa(item);
+          else onAbrirUbicaManual(item);
+        }}>
         {item.ubicacion || <span className="text-white/30 text-xs">—</span>}
       </td>
 
       {/* ── Col PRESPL (equivale a col 15 original)
            Doble clic → FrmConsDetpresplit
            WinForms: e.ColumnIndex == 15 */}
-      <td className={`px-2 py-0.5 text-right font-mono border-b border-black/10 tabular-nums ${
-                     item.presplit > 0 ? 'hover:underline cursor-pointer' : ''}`}
-          title={item.presplit > 0 ? 'Doble clic: ver detalle pre-split (FrmConsDetpresplit)' : ''}
-          onDoubleClick={e => {
-            e.stopPropagation();
-            if (item.presplit > 0) onAbrirDetalle(item, 'presplit');
-          }}>
+      <td className={`px-2 py-0.5 text-right font-mono border-b border-black/10 tabular-nums ${item.presplit > 0 ? 'hover:underline cursor-pointer' : ''}`}
+        title={item.presplit > 0 ? 'Doble clic: ver detalle pre-split (FrmConsDetpresplit)' : ''}
+        onDoubleClick={e => {
+          e.stopPropagation();
+          if (item.presplit > 0) onAbrirDetalle(item, 'presplit');
+        }}>
         {item.presplit > 0 ? item.presplit : ''}
       </td>
 

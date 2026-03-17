@@ -1,7 +1,5 @@
 // src/components/detalles/ModalReciboInfo.tsx
-// Equivalente a ReciboPTC() y ReciboPTP() del WinForms original.
-// Se abre al dar doble clic en la columna FOLIO-TARIMA (col 0 original).
-// Muestra información del recibo/orden de producción.
+// Diseño Corporativo GAB / Mr. Lucky - Profesional y refinado
 
 import { useEffect, useState } from 'react';
 import type { ItemInventario } from '../../types/inventario.types';
@@ -19,30 +17,28 @@ function extraerRecibo(nombre: string): string {
 
 function extraerTarima(nombre: string): string {
   const nombreTrim = nombre.trim();
-  const pos  = nombre.indexOf('-');
+  const pos = nombre.indexOf('-');
   const pos2 = nombre.indexOf('--');
-  const tam  = pos2 > 0 ? pos2 : nombreTrim.length;
+  const tam = pos2 > 0 ? pos2 : nombreTrim.length;
   const longitud = tam - (pos + 1);
   if (pos < 0 || longitud <= 0) return '';
   return nombreTrim.substr(pos + 1, longitud);
 }
 
 export function ModalReciboInfo({ item, onClose }: Props) {
-  const [data, setData]         = useState<any>(null);
+  const [data, setData] = useState<any>(null);
   const [cargando, setCargando] = useState(true);
-  const [error, setError]       = useState('');
+  const [error, setError] = useState('');
 
   const recibo = extraerRecibo(item.nombre);
   const tarima = item.tarima || extraerTarima(item.nombre);
+  const esPTC = item.tipo === 'PTC';
 
   useEffect(() => {
     let url: string;
-
-    if (item.tipo === 'PTC') {
-      // ReciboPTC: recibo (6 chars), prod
+    if (esPTC) {
       url = `${BASE_URL}/tarimas/recibo-ptc?recibo=${encodeURIComponent(recibo)}&prod=${encodeURIComponent(item.cvePro)}`;
     } else {
-      // ReciboPTP: nombre completo (FOLIO-TARIMA), prod, cvePro
       url = `${BASE_URL}/tarimas/recibo-ptp?folio=${encodeURIComponent(recibo)}&tarima=${encodeURIComponent(tarima)}&prod=${encodeURIComponent(item.cvePro)}`;
     }
 
@@ -50,67 +46,132 @@ export function ModalReciboInfo({ item, onClose }: Props) {
       .then(r => r.ok ? r.json() : Promise.reject(`HTTP ${r.status}`))
       .then(d => { setData(d); setCargando(false); })
       .catch(e => { setError(String(e)); setCargando(false); });
-  }, [recibo, tarima, item.cvePro, item.tipo]);
-
-  const titulo = item.tipo === 'PTC' ? 'Información de Recibo PTC' : 'Información de Folio PTP';
+  }, [recibo, tarima, item.cvePro, esPTC]);
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 border border-gray-600 rounded-lg w-full max-w-lg shadow-xl flex flex-col max-h-[80vh]">
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl shadow-slate-900/20 flex flex-col max-h-[90vh] ring-1 ring-slate-200">
 
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <div>
-            <h2 className="text-white font-bold">{titulo}</h2>
-            <p className="text-gray-300 text-xs font-mono mt-0.5">
-              {item.prod} &nbsp;·&nbsp; {item.nombre}
-            </p>
+        {/* Header Corporativo - Diferenciado por tipo */}
+        <div className={`flex items-start justify-between p-6 border-b border-slate-200 rounded-t-2xl ${esPTC
+            ? 'bg-gradient-to-r from-emerald-800 to-teal-700'
+            : 'bg-gradient-to-r from-orange-700 to-amber-600'
+          }`}>
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-3">
+                <span className="px-2.5 py-0.5 rounded-md bg-white/20 text-white text-xs font-semibold tracking-wide uppercase backdrop-blur-sm">
+                  {item.tipo}
+                </span>
+                <h2 className="text-xl font-bold text-white tracking-tight">
+                  {esPTC ? 'Recibo' : 'Folio'} {recibo}
+                </h2>
+              </div>
+              <p className="text-white/80 font-mono text-sm">
+                {item.prod} <span className="text-white/40">|</span> {item.nombre}
+              </p>
+            </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-lg px-2">✕</button>
+
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors duration-200 group"
+          >
+            <svg className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         {/* Contenido */}
-        <div className="flex-1 overflow-y-auto p-4">
-          {cargando && <div className="text-gray-400 text-center py-8">Consultando...</div>}
-          {error && <div className="text-red-400 text-sm text-center py-4">{error}</div>}
+        <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+          {cargando && (
+            <div className="flex items-center justify-center py-16">
+              <div className="flex items-center gap-3">
+                <div className={`animate-spin rounded-full h-6 w-6 border-2 border-slate-300 ${esPTC ? 'border-t-emerald-600' : 'border-t-orange-600'}`} />
+                <span className="text-slate-500 font-medium">Cargando información...</span>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-red-700 flex items-center gap-3">
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
+
           {data && (
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-              {item.tipo === 'PTC' ? (
-                <>
-                  <Campo label="Recibo"     valor={data.recibo ?? data.Recibo} />
-                  <Campo label="Fecha"      valor={data.fecha ?? data.Fecha} />
-                  <Campo label="Producto"   valor={data.producto ?? data.Producto} span />
-                  <Campo label="Productor"  valor={data.productor ?? data.Productor} span />
-                  <Campo label="Rancho"     valor={data.rancho ?? data.Rancho} />
-                  <Campo label="Campo"      valor={data.campo ?? data.Campo} />
-                  <Campo label="Región"     valor={data.region ?? data.Region} />
-                  <Campo label="Tipo"       valor={data.tipoRecibo ?? data.TipoRecibo} />
-                  <Campo label="Cantidad"   valor={fmt(data.cantidad ?? data.Cantidad)} />
-                  <Campo label="Peso Bruto" valor={`${fmt2(data.pesoBruto ?? data.PesoBruto)} kg`} />
-                  <Campo label="Tara"       valor={`${fmt2(data.tara ?? data.Tara)} kg`} />
-                  <Campo label="Peso Neto"  valor={`${fmt2(data.pesoNeto ?? data.PesoNeto)} kg`} />
-                </>
-              ) : (
-                <>
-                  <Campo label="Folio"         valor={data.folio ?? data.Folio} />
-                  <Campo label="Fecha"         valor={data.fecha ?? data.Fecha} />
-                  <Campo label="Producto"      valor={data.producto ?? data.Producto} span />
-                  <Campo label="Lote"          valor={data.lote ?? data.Lote} />
-                  <Campo label="Fecha Hist."   valor={data.fechaHistRecep ?? data.FechaHistRecep} />
-                  <Campo label="Cajas Tot."    valor={fmt(data.cajas ?? data.Cajas)} />
-                  <Campo label="Surtidas"      valor={fmt(data.cajasSurtidas ?? data.CajasSurtidas)} />
-                  <Campo label="Pendientes"    valor={fmt(data.cajasPendientes ?? data.CajasPendientes)} />
-                  <Campo label="Peso Neto"     valor={`${fmt2(data.pesoNeto ?? data.PesoNeto)} kg`} />
-                  <Campo label="Núm. Unidades" valor={fmt(data.numUnidades ?? data.NumUnidades)} />
-                </>
-              )}
-            </dl>
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${esPTC ? 'bg-emerald-100' : 'bg-orange-100'}`}>
+                  <svg className={`w-4 h-4 ${esPTC ? 'text-emerald-700' : 'text-orange-700'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-base font-semibold text-slate-800">
+                  Datos del {esPTC ? 'Recibo' : 'Folio'}
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {esPTC ? (
+                  <>
+                    <InfoCard label="Recibo" value={data.recibo ?? data.Recibo} highlight />
+                    <InfoCard label="Fecha" value={data.fecha ?? data.Fecha} />
+                    <InfoCard label="Producto" value={data.producto ?? data.Producto} span highlight />
+                    <InfoCard label="Productor" value={data.productor ?? data.Productor} span />
+                    <InfoCard label="Rancho" value={data.rancho ?? data.Rancho} />
+                    <InfoCard label="Campo" value={data.campo ?? data.Campo} />
+                    <InfoCard label="Región" value={data.region ?? data.Region} />
+                    <InfoCard label="Tipo" value={data.tipoRecibo ?? data.TipoRecibo} />
+                    <InfoCard label="Cantidad" value={fmt(data.cantidad ?? data.Cantidad)} numeric />
+                    <InfoCard label="Peso Bruto" value={`${fmt2(data.pesoBruto ?? data.PesoBruto)} kg`} numeric />
+                    <InfoCard label="Tara" value={`${fmt2(data.tara ?? data.Tara)} kg`} numeric />
+                    <InfoCard label="Peso Neto" value={`${fmt2(data.pesoNeto ?? data.PesoNeto)} kg`} numeric accent />
+                  </>
+                ) : (
+                  <>
+                    <InfoCard label="Folio" value={data.folio ?? data.Folio} highlight />
+                    <InfoCard label="Fecha" value={data.fecha ?? data.Fecha} />
+                    <InfoCard label="Producto" value={data.producto ?? data.Producto} span highlight />
+                    <InfoCard label="Lote" value={data.lote ?? data.Lote} accent />
+                    <InfoCard label="Fecha Hist." value={data.fechaHistRecep ?? data.FechaHistRecep} />
+
+                    <div className="col-span-2 grid grid-cols-3 gap-3">
+                      <InfoCard label="Cajas Tot." value={fmt(data.cajas ?? data.Cajas)} numeric />
+                      <InfoCard label="Surtidas" value={fmt(data.cajasSurtidas ?? data.CajasSurtidas)} numeric />
+                      <InfoCard
+                        label="Pendientes"
+                        value={fmt(data.cajasPendientes ?? data.CajasPendientes)}
+                        numeric
+                        warning={(data.cajasPendientes ?? 0) > 0}
+                      />
+                    </div>
+
+                    <InfoCard label="Peso Neto" value={`${fmt2(data.pesoNeto ?? data.PesoNeto)} kg`} numeric accent />
+                    <InfoCard label="Núm. Unidades" value={fmt(data.numUnidades ?? data.NumUnidades)} numeric />
+                  </>
+                )}
+              </div>
+            </div>
           )}
         </div>
 
-        <div className="p-3 border-t border-gray-700 flex justify-end">
-          <button onClick={onClose}
-            className="px-4 py-1.5 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded">
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-slate-200 flex justify-end bg-white rounded-b-2xl">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm"
+          >
             Cerrar
           </button>
         </div>
@@ -119,14 +180,44 @@ export function ModalReciboInfo({ item, onClose }: Props) {
   );
 }
 
-function Campo({ label, valor, span }: { label: string; valor: any; span?: boolean }) {
+function InfoCard({
+  label,
+  value,
+  span,
+  numeric,
+  highlight,
+  accent,
+  warning
+}: {
+  label: string;
+  value: any;
+  span?: boolean;
+  numeric?: boolean;
+  highlight?: boolean;
+  accent?: boolean;
+  warning?: boolean;
+}) {
   return (
-    <>
-      <dt className={`text-gray-400 font-semibold ${span ? 'col-span-2 mt-1' : ''}`}>{label}</dt>
-      <dd className={`text-white font-mono ${span ? 'col-span-2' : ''}`}>{valor ?? '—'}</dd>
-    </>
+    <div className={`group p-4 rounded-lg border transition-all duration-200 ${span ? 'col-span-2' : ''
+      } ${highlight
+        ? 'bg-emerald-50/50 border-emerald-200'
+        : accent
+          ? 'bg-sky-50/50 border-sky-200'
+          : warning
+            ? 'bg-amber-50/50 border-amber-200'
+            : 'bg-white border-slate-200 hover:border-slate-300'
+      }`}>
+      <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">{label}</p>
+      <p className={`text-sm ${numeric ? 'font-mono' : ''} ${highlight ? 'text-emerald-900 font-semibold' :
+          accent ? 'text-sky-900 font-semibold' :
+            warning ? 'text-amber-900 font-semibold' :
+              'text-slate-700'
+        }`}>
+        {value ?? '—'}
+      </p>
+    </div>
   );
 }
 
-const fmt  = (v: any) => v != null ? Number(v).toLocaleString() : '—';
+const fmt = (v: any) => v != null ? Number(v).toLocaleString() : '—';
 const fmt2 = (v: any) => v != null ? Number(v).toFixed(2) : '—';
