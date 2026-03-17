@@ -1,15 +1,17 @@
-// src/pages/Principal.tsx — con todos los modales de doble clic cableados
+// src/pages/Principal.tsx
 import { useState, useCallback } from 'react';
-import { useInventario } from '../hooks/useInventario';
-import { InventarioTable }         from '../components/inventario/InventarioTable';
-import { FiltrosBarra }            from '../components/inventario/FiltrosBarra';
-import { EstadisticasPanel }       from '../components/inventario/EstadisticasPanel';
-import { ModalAuth }               from '../components/autorizacion/ModalAuth';
-import { ModalAutorizacion }       from '../components/autorizacion/ModalAutorizacion';
-import { MapaAlmacen }             from '../components/almacen/MapaAlmacen';
-import { ModalDetalleEmbarque }    from '../components/detalles/ModalDetalleEmbarque';
-import { ModalDetallePresplit }    from '../components/detalles/ModalDetallePresplit';
-import { ModalReciboInfo }         from '../components/detalles/ModalReciboInfo';
+import { useInventario }              from '../hooks/useInventario';
+import { InventarioTable }            from '../components/inventario/InventarioTable';
+import { FiltrosBarra }               from '../components/inventario/FiltrosBarra';
+import { EstadisticasPanel }          from '../components/inventario/EstadisticasPanel';
+import { ModalAuth }                  from '../components/autorizacion/ModalAuth';
+import { ModalAutorizacion }          from '../components/autorizacion/ModalAutorizacion';
+import { MapaAlmacen }                from '../components/almacen/MapaAlmacen';
+import { ModalDetalleEmbarque }       from '../components/detalles/ModalDetalleEmbarque';
+import { ModalDetallePresplit }       from '../components/detalles/ModalDetallePresplit';
+import { ModalReciboInfo }            from '../components/detalles/ModalReciboInfo';
+// FIX H-4: importar ubicacionApi en lugar de usar fetch() directo
+import { ubicacionApi }               from '../api/inventarioApi';
 import type {
   FiltroInventario,
   ItemInventario,
@@ -19,17 +21,24 @@ import type {
 // ─── Estado de los modales de doble clic ────────────────────────────────────
 
 type ModalDetalle =
-  | { tipo: 'embarque';  item: ItemInventario }
-  | { tipo: 'presplit';  item: ItemInventario }
-  | { tipo: 'recibo';    item: ItemInventario }
-  | { tipo: 'mapa';      item: ItemInventario }
+  | { tipo: 'embarque';     item: ItemInventario }
+  | { tipo: 'presplit';     item: ItemInventario }
+  | { tipo: 'recibo';       item: ItemInventario }
+  | { tipo: 'mapa';         item: ItemInventario }
   | { tipo: 'ubica-manual'; item: ItemInventario }
   | null;
 
+// ─── Estado de error para la asignación de ubicación ────────────────────────
+
+interface UbicaManualState {
+  guardando: boolean;
+  error: string;
+}
+
 export function Principal() {
-  const [filtro, setFiltro]             = useState<FiltroInventario>('todos');
-  const [buscar, setBuscar]             = useState('');
-  const [inputBuscar, setInputBuscar]   = useState('');
+  const [filtro, setFiltro]               = useState<FiltroInventario>('todos');
+  const [buscar, setBuscar]               = useState('');
+  const [inputBuscar, setInputBuscar]     = useState('');
   const [seleccionadas, setSeleccionadas] = useState<Set<number>>(new Set());
 
   // Modales de autorización
@@ -40,8 +49,12 @@ export function Principal() {
   // Modal de doble clic (uno a la vez)
   const [modalDetalle, setModalDetalle] = useState<ModalDetalle>(null);
 
-  // Ubicación manual — estado para la asignación
-  const [nuevaUbicacion, setNuevaUbicacion] = useState('');
+  // FIX H-4: estado tipado para la asignación de ubicación
+  const [nuevaUbicacion, setNuevaUbicacion]   = useState('');
+  const [ubicaState, setUbicaState]           = useState<UbicaManualState>({
+    guardando: false,
+    error: '',
+  });
 
   const {
     data, isLoading, isFetching, segundosHastaRefresco, refrescarManual,
@@ -87,32 +100,57 @@ export function Principal() {
 
   // ── Callbacks de doble clic ───────────────────────────────────────────────
 
-  /** Col 7 original (CANTIDAD) → FrmConsDet */
-  const handleAbrirDetalle = useCallback((item: ItemInventario, tipo: 'embarque' | 'presplit') => {
-    setModalDetalle({ tipo, item });
-  }, []);
+  const handleAbrirDetalle = useCallback(
+    (item: ItemInventario, tipo: 'embarque' | 'presplit') => {
+      setModalDetalle({ tipo, item });
+    }, []);
 
-  /** Col 0 original (NOMBRE) → ReciboPTC / ReciboPTP */
   const handleAbrirRecibo = useCallback((item: ItemInventario) => {
     setModalDetalle({ tipo: 'recibo', item });
   }, []);
 
-  /** Col 13 original (UBICA) con valor → FrmLocaliza */
   const handleAbrirMapa = useCallback((item: ItemInventario) => {
     setModalDetalle({ tipo: 'mapa', item });
   }, []);
 
-  /** Col 13 original (UBICA) sin valor → FrmUbicaManual */
   const handleAbrirUbicaManual = useCallback((item: ItemInventario) => {
     setNuevaUbicacion('');
+    setUbicaState({ guardando: false, error: '' });
     setModalDetalle({ tipo: 'ubica-manual', item });
   }, []);
 
   const cerrarModal = useCallback(() => setModalDetalle(null), []);
 
+  // FIX H-4: guardar ubicación usando ubicacionApi en lugar de fetch() directo.
+  // Ventajas: manejo de errores centralizado, URL base configurada en un solo
+  // lugar, sin cast (import.meta as any).env que rompía el tipado estricto.
+  const handleGuardarUbicacion = useCallback(async () => {
+    if (!nuevaUbicacion || modalDetalle?.tipo !== 'ubica-manual') return;
+
+    setUbicaState({ guardando: true, error: '' });
+
+    const item = modalDetalle.item;
+    try {
+      await ubicacionApi.actualizarUbicacion({
+        folio:        item.nombre.substring(0, 6),
+        cveProd:      item.cvePro,
+        tarima:       item.tarima,
+        tipo:         item.tipo as 'PTC' | 'PTP',
+        ubicacion:    nuevaUbicacion,
+        usuario:      'WEB',
+        nombreMaquina: window.location.hostname,
+      });
+      cerrarModal();
+      refrescarManual();
+    } catch (e: unknown) {
+      const mensaje = e instanceof Error ? e.message : 'Error al guardar la ubicación';
+      setUbicaState({ guardando: false, error: mensaje });
+    }
+  }, [nuevaUbicacion, modalDetalle, cerrarModal, refrescarManual]);
+
   // ── Formato del contador ──────────────────────────────────────────────────
   const formatSegundos = (s: number) => {
-    const m = Math.floor(s / 60);
+    const m   = Math.floor(s / 60);
     const sec = s % 60;
     return m > 0 ? `${m}:${sec.toString().padStart(2, '0')}` : `${sec}s`;
   };
@@ -162,7 +200,9 @@ export function Principal() {
             </button>
           )}
           <span className={`font-mono text-xs px-2 py-1 rounded border ${
-            segundosHastaRefresco < 60 ? 'text-orange-300 border-orange-700' : 'text-gray-300 border-gray-600'
+            segundosHastaRefresco < 60
+              ? 'text-orange-300 border-orange-700'
+              : 'text-gray-300 border-gray-600'
           }`}>⏱ {formatSegundos(segundosHastaRefresco)}</span>
           <button onClick={refrescarManual} disabled={isFetching}
             className="px-2 py-1 text-xs rounded bg-blue-700 hover:bg-blue-600 disabled:opacity-50 border border-blue-500">
@@ -234,22 +274,19 @@ export function Principal() {
 
       {/* ═══ MODALES DE DOBLE CLIC ════════════════════════════════════════════ */}
 
-      {/* FrmConsDet — historial embarques (col CANT double-click) */}
       {modalDetalle?.tipo === 'embarque' && (
         <ModalDetalleEmbarque item={modalDetalle.item} onClose={cerrarModal} />
       )}
 
-      {/* FrmConsDetpresplit — detalle presplit (col PRESPL double-click) */}
       {modalDetalle?.tipo === 'presplit' && (
         <ModalDetallePresplit item={modalDetalle.item} onClose={cerrarModal} />
       )}
 
-      {/* ReciboPTC / ReciboPTP — info recibo (col FOLIO-TARIMA double-click) */}
       {modalDetalle?.tipo === 'recibo' && (
         <ModalReciboInfo item={modalDetalle.item} onClose={cerrarModal} />
       )}
 
-      {/* FrmLocaliza — mapa con ubicación resaltada (col UBICACIÓN doble-clic CON valor) */}
+      {/* FrmLocaliza — mapa con ubicación resaltada */}
       {modalDetalle?.tipo === 'mapa' && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-800 border border-gray-600 rounded-lg p-4 w-full max-w-2xl shadow-xl">
@@ -275,7 +312,8 @@ export function Principal() {
         </div>
       )}
 
-      {/* FrmUbicaManual — asignar ubicación (col UBICACIÓN doble-clic SIN valor) */}
+      {/* FrmUbicaManual — asignar ubicación
+          FIX H-4: usa handleGuardarUbicacion con ubicacionApi, sin fetch directo */}
       {modalDetalle?.tipo === 'ubica-manual' && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-800 border border-gray-600 rounded-lg p-4 w-full max-w-2xl shadow-xl">
@@ -290,19 +328,20 @@ export function Principal() {
                 className="text-gray-400 hover:text-white text-lg px-2">✕</button>
             </div>
 
-            {/* Instrucción */}
             <p className="text-yellow-300 text-xs mb-3">
               Haga clic en una posición del mapa para asignarla:
             </p>
 
-            {/* Mapa interactivo */}
             <MapaAlmacen
               soloLectura={false}
               posicionResaltada={nuevaUbicacion || undefined}
-              onPosicionClick={(posId) => setNuevaUbicacion(posId)}
+              onPosicionClick={posId => setNuevaUbicacion(posId)}
             />
 
-            {/* Posición seleccionada + botón guardar */}
+            {ubicaState.error && (
+              <p className="text-red-400 text-xs mt-2">{ubicaState.error}</p>
+            )}
+
             <div className="mt-3 flex items-center gap-3">
               <div className="flex-1">
                 <span className="text-gray-400 text-xs">Posición seleccionada: </span>
@@ -311,32 +350,10 @@ export function Principal() {
                 </span>
               </div>
               <button
-                onClick={async () => {
-                  if (!nuevaUbicacion) return;
-                  try {
-                    const item = modalDetalle.item;
-                    await fetch(`${(import.meta as any).env?.VITE_API_URL ?? '/api'}/ubicacion`, {
-                      method: 'PUT',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        folio:        item.nombre.substring(0, 6),
-                        cveProd:      item.cvePro,
-                        tarima:       item.tarima,
-                        tipo:         item.tipo,
-                        ubicacion:    nuevaUbicacion,
-                        usuario:      'WEB',
-                        nombreMaquina: window.location.hostname,
-                      }),
-                    });
-                    cerrarModal();
-                    refrescarManual();
-                  } catch (e) {
-                    alert('Error al guardar la ubicación');
-                  }
-                }}
-                disabled={!nuevaUbicacion}
+                onClick={handleGuardarUbicacion}
+                disabled={!nuevaUbicacion || ubicaState.guardando}
                 className="px-4 py-1.5 bg-green-700 hover:bg-green-600 disabled:opacity-40 text-white text-sm rounded font-bold">
-                Guardar Ubicación
+                {ubicaState.guardando ? 'Guardando...' : 'Guardar Ubicación'}
               </button>
               <button onClick={cerrarModal}
                 className="px-4 py-1.5 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded">

@@ -12,7 +12,8 @@ interface Props {
 }
 
 function extraerRecibo(nombre: string): string {
-  return nombre.substring(0, 6);
+  nombre =nombre.substring(0, 6);
+  return nombre.replace(/\D/g, "");
 }
 
 function extraerTarima(nombre: string): string {

@@ -60,11 +60,14 @@ public class AutorizacionService : IAutorizacionService
     }
 }
 
-// GabMonitor.API/Services/UbicacionService.cs
-// (en el mismo archivo por brevedad, sepáralo si prefieres)
+// ─────────────────────────────────────────────────────────────────────────────
 
 /// <summary>
 /// Servicio de ubicaciones. Replica RN-013.
+///
+/// FIX H-3: ObtenerUbicacionTarimaAsync estaba declarado con
+/// "// Implementar con query a la BD" y retornaba null siempre.
+/// Ahora delega al repositorio con la query correspondiente según tipo.
 /// </summary>
 public class UbicacionService : IUbicacionService
 {
@@ -83,11 +86,15 @@ public class UbicacionService : IUbicacionService
             await _repo.ActualizarUbicacionPTPAsync(dto.Folio, dto.CveProd, dto.Tarima, dto.Ubicacion);
     }
 
-    public Task<object?> ObtenerUbicacionTarimaAsync(string prod, string folio, string tarima)
+    /// <summary>
+    /// FIX H-3: implementación real — retorna la ubicación actual de la tarima
+    /// consultando las tablas TB_DET_TRAZABILIDAD (PTC) o TB_DET_ETI_FINAL (PTP).
+    /// El objeto retornado incluye la ubicación y las cajas disponibles para
+    /// que el controller pueda responder 404 si la tarima no existe.
+    /// </summary>
+    public async Task<object?> ObtenerUbicacionTarimaAsync(string prod, string folio, string tarima)
     {
-        // Retorna la ubicación actual de una tarima específica
-        // Implementar con query a la BD
-        return Task.FromResult<object?>(null);
+        return await _repo.ObtenerUbicacionTarimaAsync(prod, folio, tarima);
     }
 
     public async Task<IEnumerable<object>> ObtenerInventarioPorUbicacionAsync(string codigoUbicacion)

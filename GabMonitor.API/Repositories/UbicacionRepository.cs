@@ -56,6 +56,69 @@ public class UbicacionRepository : IUbicacionRepository
     }
 
     /// <summary>
+    /// FIX H-3: implementación real de ObtenerUbicacionTarimaAsync.
+    ///
+    /// Busca la tarima en PTC primero; si no está, busca en PTP.
+    /// Retorna un objeto anónimo con Ubicacion, Cantidad y Tipo,
+    /// o null si la tarima no existe en ninguna tabla.
+    ///
+    /// Se usa en GET /api/ubicacion/{tipo}/{folio}/{tarima}?prod=...
+    /// para que el controller pueda responder 404 correctamente.
+    /// </summary>
+    public async Task<object?> ObtenerUbicacionTarimaAsync(string prod, string folio, string tarima)
+    {
+        const string sqlPtc = @"
+            SELECT TOP 1
+                ISNULL(UBICACION, '') AS Ubicacion,
+                (ETIQUETA - SURTIDO)  AS Cantidad,
+                'PTC'                 AS Tipo
+            FROM TB_DET_TRAZABILIDAD
+            WHERE RECIBO     = @folio
+              AND PROD_CLAVE = @prod
+              AND TARIMA     = @tarima
+              AND TIPO       = 'PTC'
+              AND PTI_ESTATUS_SUR = ' '";
+
+        const string sqlPtp = @"
+            SELECT TOP 1
+                ISNULL(UBICACION, '')  AS Ubicacion,
+                (NUM_CAJAS - CAJAS_SUR) AS Cantidad,
+                'PTP'                   AS Tipo
+            FROM TB_DET_ETI_FINAL
+            WHERE FOLIO    = @folio
+              AND CVE_PROD = @prod
+              AND TARIMA   = @tarima
+              AND ESTATUS_SUR = ' '";
+
+        using var conn = new SqlConnection(_connectionString);
+
+        // Intentar PTC primero
+        var rowPtc = await conn.QueryFirstOrDefaultAsync(
+            sqlPtc, new { folio, prod, tarima });
+
+        if (rowPtc != null)
+            return new
+            {
+                ubicacion = (string)(rowPtc.Ubicacion ?? ""),
+                cantidad  = (int)(rowPtc.Cantidad ?? 0),
+                tipo      = "PTC"
+            };
+
+        // Si no está en PTC, buscar en PTP
+        var rowPtp = await conn.QueryFirstOrDefaultAsync(
+            sqlPtp, new { folio, prod, tarima });
+
+        if (rowPtp == null) return null;
+
+        return new
+        {
+            ubicacion = (string)(rowPtp.Ubicacion ?? ""),
+            cantidad  = (int)(rowPtp.Cantidad ?? 0),
+            tipo      = "PTP"
+        };
+    }
+
+    /// <summary>
     /// Obtiene todo el inventario asignado a una posición del almacén.
     /// Usado por FrmInvProd al hacer clic en una posición del mapa.
     /// </summary>

@@ -23,8 +23,8 @@ public class AutorizacionController : ControllerBase
     [HttpPost("verificar")]
     public IActionResult VerificarContrasena([FromBody] VerificarContrasenaDto dto)
     {
-        // RN-011: Contraseñas del sistema original
-        // NOTA: En producción estas deben estar en appsettings o vault, no hardcoded
+        // RN-011: Contraseñas del sistema original.
+        // FIX-SEGURIDAD (C-2): mover a appsettings/env vars antes de producción.
         bool valida = dto.Contrasena == "CAMFRI2024" || dto.Contrasena == "RURR2024";
         return Ok(new { autorizado = valida });
     }
@@ -69,7 +69,9 @@ public class AutorizacionController : ControllerBase
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// FIX H-1: UbicacionController movido DENTRO del namespace GabMonitor.API.Controllers.
+// En el archivo original estaba declarado a nivel de namespace global, lo que puede
+// causar conflictos de routing y fallos de resolución en el contenedor de DI.
 
 [ApiController]
 [Route("api/[controller]")]
@@ -107,5 +109,21 @@ public class UbicacionController : ControllerBase
     {
         var items = await _service.ObtenerInventarioPorUbicacionAsync(codigo);
         return Ok(items);
+    }
+
+    /// <summary>
+    /// Ubicación actual de una tarima específica.
+    /// Equivalente a la lectura de UBICACION en el grid principal.
+    /// GET /api/ubicacion/{tipo}/{folio}/{tarima}?prod=...
+    /// </summary>
+    [HttpGet("{tipo}/{folio}/{tarima}")]
+    public async Task<IActionResult> GetUbicacionTarima(
+        string tipo, string folio, string tarima,
+        [FromQuery] string prod)
+    {
+        var ubicacion = await _service.ObtenerUbicacionTarimaAsync(prod, folio, tarima);
+        if (ubicacion == null)
+            return NotFound(new { mensaje = "Tarima no encontrada" });
+        return Ok(ubicacion);
     }
 }
