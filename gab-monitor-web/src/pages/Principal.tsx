@@ -288,76 +288,161 @@ export function Principal() {
 
       {/* FrmLocaliza — mapa con ubicación resaltada */}
       {modalDetalle?.tipo === 'mapa' && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 border border-gray-600 rounded-lg p-4 w-full max-w-2xl shadow-xl">
-            <div className="flex justify-between items-center mb-2">
-              <div>
-                <h3 className="text-white font-bold">
-                  Ubicación: {modalDetalle.item.ubicacion}
-                </h3>
-                <p className="text-gray-400 text-xs">
-                  {modalDetalle.item.prod} · {modalDetalle.item.nombre}
-                </p>
-                <p className="text-yellow-300 text-xs font-mono mt-0.5">
-                  CANT: {modalDetalle.item.existencia.toLocaleString()}
-                  {'     '}SURTIDO: {(modalDetalle.item.existencia - modalDetalle.item.cantidad).toLocaleString()}
-                  {'    '}X SURTIR: {modalDetalle.item.cantidad.toLocaleString()}
-                </p>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl shadow-slate-900/20 flex flex-col max-h-[90vh] ring-1 ring-slate-200">
+
+            {/* Header Corporativo */}
+            <div className="flex items-start justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-white to-slate-50 rounded-t-2xl">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-emerald-800 flex items-center justify-center shadow-lg shadow-emerald-800/20">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-3">
+                    <span className="px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-xs font-semibold tracking-wide uppercase">
+                      Mapa
+                    </span>
+                    <h2 className="text-xl font-bold text-slate-800 tracking-tight">
+                      Ubicación: {modalDetalle.item.ubicacion}
+                    </h2>
+                  </div>
+                  <p className="text-slate-500 font-mono text-sm">
+                    {modalDetalle.item.prod} · {modalDetalle.item.nombre}
+                  </p>
+                </div>
               </div>
-              <button onClick={cerrarModal}
-                className="text-gray-400 hover:text-white text-lg px-2">✕</button>
+
+              <button onClick={cerrarModal} className="p-2 rounded-lg hover:bg-slate-100 transition-colors duration-200 group">
+                <svg className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <MapaAlmacen posicionResaltada={modalDetalle.item.ubicacion.trim()} />
+
+            {/* Mapa */}
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+              <div className="shadow-lg rounded-xl overflow-hidden border border-slate-200">
+                <MapaAlmacen posicionResaltada={modalDetalle.item.ubicacion.trim()} soloLectura={true} />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-slate-200 flex justify-end bg-white rounded-b-2xl">
+              <button onClick={cerrarModal} className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm">
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* FrmUbicaManual — asignar ubicación
-          FIX H-4: usa handleGuardarUbicacion con ubicacionApi, sin fetch directo */}
+      {/* FrmUbicaManual — asignar ubicación */}
       {modalDetalle?.tipo === 'ubica-manual' && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 border border-gray-600 rounded-lg p-4 w-full max-w-2xl shadow-xl">
-            <div className="flex justify-between items-center mb-3">
-              <div>
-                <h3 className="text-white font-bold">Asignar Ubicación</h3>
-                <p className="text-gray-400 text-xs">
-                  {modalDetalle.item.prod} · {modalDetalle.item.nombre} · {modalDetalle.item.tipo}
-                </p>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl shadow-slate-900/20 flex flex-col max-h-[90vh] ring-1 ring-slate-200">
+
+            {/* Header Corporativo */}
+            <div className="flex items-start justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-white to-slate-50 rounded-t-2xl">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-emerald-800 flex items-center justify-center shadow-lg shadow-emerald-800/20">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-3">
+                    <span className="px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-xs font-semibold tracking-wide uppercase">
+                      Asignar
+                    </span>
+                    <h2 className="text-xl font-bold text-slate-800 tracking-tight">
+                      Ubicación Manual
+                    </h2>
+                  </div>
+                  <p className="text-slate-500 font-mono text-sm">
+                    {modalDetalle.item.prod} · {modalDetalle.item.nombre} · {modalDetalle.item.tipo}
+                  </p>
+                </div>
               </div>
-              <button onClick={cerrarModal}
-                className="text-gray-400 hover:text-white text-lg px-2">✕</button>
+
+              <button onClick={cerrarModal} className="p-2 rounded-lg hover:bg-slate-100 transition-colors duration-200 group">
+                <svg className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
-            <p className="text-yellow-300 text-xs mb-3">
-              Haga clic en una posición del mapa para asignarla:
-            </p>
-
-            <MapaAlmacen
-              soloLectura={false}
-              posicionResaltada={nuevaUbicacion || undefined}
-              onPosicionClick={posId => setNuevaUbicacion(posId)}
-            />
-
-            {ubicaState.error && (
-              <p className="text-red-400 text-xs mt-2">{ubicaState.error}</p>
-            )}
-
-            <div className="mt-3 flex items-center gap-3">
-              <div className="flex-1">
-                <span className="text-gray-400 text-xs">Posición seleccionada: </span>
-                <span className="text-white font-mono font-bold text-sm">
-                  {nuevaUbicacion || '—'}
-                </span>
+            {/* Instrucciones */}
+            <div className="px-6 py-4 bg-amber-50/50 border-b border-amber-100">
+              <div className="flex items-center gap-2 text-amber-700">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm font-medium">
+                  Haga clic en una posición del mapa para asignarla
+                </p>
               </div>
+            </div>
+
+            {/* Mapa */}
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+              <div className="shadow-lg rounded-xl overflow-hidden border border-slate-200">
+                <MapaAlmacen
+                  soloLectura={false}
+                  posicionResaltada={nuevaUbicacion || undefined}
+                  onPosicionClick={posId => setNuevaUbicacion(posId)}
+                />
+              </div>
+
+              {/* Error */}
+              {ubicaState.error && (
+                <div className="mt-4 rounded-lg bg-red-50 border border-red-200 p-4 text-red-700 flex items-center gap-3">
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-sm">{ubicaState.error}</span>
+                </div>
+              )}
+
+              {/* Posición seleccionada */}
+              <div className="mt-4 p-4 rounded-lg border border-slate-200 bg-white">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${nuevaUbicacion ? 'bg-emerald-100' : 'bg-slate-100'}`}>
+                    <svg className={`w-5 h-5 ${nuevaUbicacion ? 'text-emerald-600' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Posición seleccionada</p>
+                    <p className={`text-xl font-bold font-mono tracking-tight ${nuevaUbicacion ? 'text-emerald-700' : 'text-slate-400'}`}>
+                      {nuevaUbicacion || '—'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-3 bg-white rounded-b-2xl">
+              <button onClick={cerrarModal} className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors duration-200">
+                Cancelar
+              </button>
               <button
                 onClick={handleGuardarUbicacion}
                 disabled={!nuevaUbicacion || ubicaState.guardando}
-                className="px-4 py-1.5 bg-green-700 hover:bg-green-600 disabled:opacity-40 text-white text-sm rounded font-bold">
-                {ubicaState.guardando ? 'Guardando...' : 'Guardar Ubicación'}
-              </button>
-              <button onClick={cerrarModal}
-                className="px-4 py-1.5 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded">
-                Cancelar
+                className="px-5 py-2 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm flex items-center gap-2"
+              >
+                {ubicaState.guardando ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white" />
+                    Guardando...
+                  </>
+                ) : 'Guardar Ubicación'}
               </button>
             </div>
           </div>

@@ -54,20 +54,20 @@ export function InventarioTable({
           <thead className="sticky top-0 bg-gray-700 z-10 text-gray-200">
             <tr>
               {modoAutorizacion && <th className="w-7 px-1 py-1.5 border-b border-gray-600">AUT</th>}
-              <th className="px-2 py-1.5 text-left border-b border-gray-600 min-w-[220px]"
+              <th className="px-2 py-1.5 text-left border-b border-gray-600 min-w-[100px]"
                 title="Doble clic: ver info del recibo">FOLIO - TARIMA</th>
               <th className="px-2 py-1.5 border-b border-gray-600 w-20">FECHA ELA</th>
-              <th className="px-2 py-1.5 border-b border-gray-600 w-10">LOTE</th>
+              <th className="px-2 py-1.5 border-b border-gray-600 w-14">LOTE</th>
               <th className="px-2 py-1.5 border-b border-gray-600 w-20">FECHA CAD</th>
               <th className="px-2 py-1.5 text-right border-b border-gray-600 w-14">DIAS/TEO</th>
               <th className="px-2 py-1.5 text-right border-b border-gray-600 w-14">EXIST/FIS</th>
               <th className="px-2 py-1.5 text-right border-b border-gray-600 w-14 font-bold"
-                title="Doble clic: ver detalle de embarques">CANT ▾</th>
+                title="Doble clic: ver detalle de embarques">CANT</th>
               <th className="px-2 py-1.5 border-b border-gray-600 w-16"
-                title="Doble clic: ver en mapa / asignar ubicación">UBICACIÓN ▾</th>
+                title="Doble clic: ver en mapa / asignar ubicación">UBICACIÓN</th>
               <th className="px-2 py-1.5 text-right border-b border-gray-600 w-10"
-                title="Doble clic: ver detalle pre-split">PRESPL ▾</th>
-              <th className="px-2 py-1.5 text-right border-b border-gray-600 w-18">PESO EST</th>
+                title="Doble clic: ver detalle pre-split">PRESPL</th>
+              <th className="px-2 py-1.5 text-right border-b border-gray-600 w-10">PESO EST</th>
             </tr>
           </thead>
           <tbody>
