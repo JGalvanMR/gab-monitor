@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GabMonitor.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dc5d9cee2a6143dc3943f3da84540abee27ed38c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+90562374dbfb3bc0a2e4f54b26f788cc86f74058")]
 [assembly: System.Reflection.AssemblyProductAttribute("GabMonitor.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GabMonitor.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
