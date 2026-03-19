@@ -1,38 +1,276 @@
 /* src/index.css */
+/* Diseño Corporativo GAB / Mr. Lucky - Estilos globales */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Fuente mono para datos numéricos */
+/* Variables CSS corporativas */
 @layer base {
+  :root {
+    --color-primary: 6 95 70;      /* emerald-700 */
+    --color-primary-hover: 5 78 61; /* emerald-800 */
+    --color-secondary: 30 41 59;    /* slate-700 */
+    --color-accent: 20 184 166;    /* teal-500 */
+    --color-warning: 217 119 6;    /* amber-600 */
+    --color-danger: 220 38 38;     /* red-600 */
+    --color-success: 22 163 74;    /* green-600 */
+    --color-info: 14 165 233;       /* sky-500 */
+  }
+
   html {
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
     font-size: 24px;
-  }
-  
-  body {
-    @apply bg-gray-800 text-white;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  
-  /* Scrollbar personalizado para la tabla */
+
+  body {
+    @apply bg-slate-900 text-white;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Scrollbar personalizado - Moderno y sutil */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
   ::-webkit-scrollbar-track {
-    @apply bg-gray-900;
+    @apply bg-slate-800/50;
+    border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-gray-600 rounded;
+    @apply bg-slate-600;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-500;
+    @apply bg-slate-500;
+  }
+
+  /* Scrollbar para elementos más pequeños */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-slate-500 rounded-full;
   }
 }
 
+/* Utilidades adicionales */
 @layer utilities {
   .tabular-nums {
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Texto con gradiente */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-400;
+  }
+
+  /* Sombras suaves corporativas */
+  .shadow-soft {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  .shadow-card {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
+
+  /* Transiciones suaves */
+  .transition-smooth {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Animaciones */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse-soft {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 2s ease-in-out infinite;
+  }
+
+  /* Focus ring personalizado */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-2 focus:ring-offset-slate-900;
+  }
+
+  /* Backdrop blur para overlays */
+  .backdrop-overlay {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+}
+
+/* Componentes reutilizables */
+@layer components {
+  /* Botón primario */
+  .btn-primary {
+    @apply px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white font-medium rounded-lg transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Botón secundario */
+  .btn-secondary {
+    @apply px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Botón de peligro */
+  .btn-danger {
+    @apply px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded-lg transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Input moderno */
+  .input-modern {
+    @apply w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 transition-all duration-200;
+    @apply focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20;
+  }
+
+  /* Card moderna */
+  .card-modern {
+    @apply bg-white rounded-2xl shadow-xl shadow-slate-900/10 ring-1 ring-slate-200 overflow-hidden;
+  }
+
+  /* Modal overlay */
+  .modal-overlay {
+    @apply fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4;
+  }
+
+  /* Modal container */
+  .modal-container {
+    @apply bg-white rounded-2xl shadow-2xl shadow-slate-900/20 flex flex-col ring-1 ring-slate-200;
+  }
+
+  /* Badge moderno */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold;
+  }
+
+  .badge-emerald {
+    @apply bg-emerald-100 text-emerald-800;
+  }
+
+  .badge-slate {
+    @apply bg-slate-100 text-slate-700;
+  }
+
+  .badge-amber {
+    @apply bg-amber-100 text-amber-800;
+  }
+
+  .badge-red {
+    @apply bg-red-100 text-red-800;
+  }
+
+  .badge-sky {
+    @apply bg-sky-100 text-sky-800;
+  }
+
+  .badge-purple {
+    @apply bg-purple-100 text-purple-800;
+  }
+
+  /* Tabla moderna */
+  .table-modern {
+    @apply w-full text-sm;
+  }
+
+  .table-modern thead {
+    @apply bg-slate-50 border-b border-slate-200;
+  }
+
+  .table-modern th {
+    @apply px-4 py-3 text-left font-semibold text-slate-600 text-xs uppercase tracking-wider;
+  }
+
+  .table-modern tbody {
+    @apply divide-y divide-slate-100;
+  }
+
+  .table-modern td {
+    @apply px-4 py-3 text-slate-700;
+  }
+
+  .table-modern tr {
+    @apply hover:bg-slate-50/80 transition-colors;
+  }
+
+  /* Spinner */
+  .spinner {
+    @apply animate-spin rounded-full border-2 border-slate-300 border-t-emerald-600;
+  }
+
+  /* Stat box */
+  .stat-box {
+    @apply px-6 py-4;
+  }
+
+  .stat-box-label {
+    @apply text-xs font-medium text-slate-500 uppercase tracking-wider;
+  }
+
+  .stat-box-value {
+    @apply text-2xl font-bold font-mono tracking-tight;
+  }
+
+  /* Empty state */
+  .empty-state {
+    @apply text-center py-12 rounded-lg border border-dashed border-slate-300 bg-slate-50;
+  }
+
+  .empty-state-icon {
+    @apply w-10 h-10 text-slate-300 mx-auto mb-3;
+  }
+
+  .empty-state-text {
+    @apply text-slate-500 text-sm;
+  }
+
+  /* Error state */
+  .error-state {
+    @apply rounded-lg bg-red-50 border border-red-200 p-4 text-red-700 flex items-center gap-3;
+  }
+
+  /* Tooltip */
+  .tooltip {
+    @apply absolute z-50 px-2 py-1 text-xs font-medium text-white bg-slate-800 rounded shadow-lg;
   }
 }

@@ -54,11 +54,11 @@ export function ModalReciboInfo({ item, onClose }: Props) {
       <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl shadow-slate-900/20 flex flex-col max-h-[90vh] ring-1 ring-slate-200">
 
         {/* Header Corporativo - Diferenciado por tipo */}
-        <div className={`flex items-start justify-between p-6 border-b border-slate-200 rounded-t-2xl ${esPTC
+        <div className={`flex items-start justify-between p-4 border-b border-slate-200 rounded-t-2xl ${esPTC
             ? 'bg-gradient-to-r from-emerald-800 to-teal-700'
             : 'bg-gradient-to-r from-orange-700 to-amber-600'
           }`}>
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-2">
             <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
               <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -66,7 +66,7 @@ export function ModalReciboInfo({ item, onClose }: Props) {
             </div>
 
             <div className="space-y-1">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-md bg-white/20 text-white text-xs font-semibold tracking-wide uppercase backdrop-blur-sm">
                   {item.tipo}
                 </span>
@@ -111,8 +111,8 @@ export function ModalReciboInfo({ item, onClose }: Props) {
           )}
 
           {data && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 mb-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 mb-2">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${esPTC ? 'bg-emerald-100' : 'bg-orange-100'}`}>
                   <svg className={`w-4 h-4 ${esPTC ? 'text-emerald-700' : 'text-orange-700'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -123,7 +123,7 @@ export function ModalReciboInfo({ item, onClose }: Props) {
                 </h3>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-1.5">
                 {esPTC ? (
                   <>
                     <InfoCard label="Recibo" value={data.recibo ?? data.Recibo} highlight />
@@ -199,7 +199,7 @@ function InfoCard({
   warning?: boolean;
 }) {
   return (
-    <div className={`group p-4 rounded-lg border transition-all duration-200 ${span ? 'col-span-2' : ''
+    <div className={`group p-2 rounded-lg border transition-all duration-200 ${span ? 'col-span-2' : ''
       } ${highlight
         ? 'bg-emerald-50/50 border-emerald-200'
         : accent

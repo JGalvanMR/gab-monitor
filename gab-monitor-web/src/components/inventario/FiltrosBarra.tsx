@@ -35,11 +35,10 @@ export function FiltrosBarra({
     <button
       onClick={() => onFiltroChange(filtro)}
       title={title}
-      className={`px-3 py-1 text-xs font-bold rounded border transition-all ${
-        filtroActivo === filtro
+      className={`px-3 py-1 text-xs font-bold rounded border transition-all ${filtroActivo === filtro
           ? `${claseActivo} ring-2 ring-white ring-offset-1 ring-offset-gray-900`
           : claseBase
-      }`}
+        }`}
     >
       {label}
     </button>
@@ -53,9 +52,9 @@ export function FiltrosBarra({
     setExportando(true);
     try {
       const blob = await inventarioApi.exportarExcel(filtroActivo);
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href     = url;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
       a.download = `inventario_${filtroActivo}_${new Date().toISOString().slice(0, 10)}.xlsx`;
       document.body.appendChild(a);
       a.click();

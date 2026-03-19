@@ -1,17 +1,17 @@
 // src/pages/Principal.tsx
 import { useState, useCallback } from 'react';
-import { useInventario }              from '../hooks/useInventario';
-import { InventarioTable }            from '../components/inventario/InventarioTable';
-import { FiltrosBarra }               from '../components/inventario/FiltrosBarra';
-import { EstadisticasPanel }          from '../components/inventario/EstadisticasPanel';
-import { ModalAuth }                  from '../components/autorizacion/ModalAuth';
-import { ModalAutorizacion }          from '../components/autorizacion/ModalAutorizacion';
-import { MapaAlmacen }                from '../components/almacen/MapaAlmacen';
-import { ModalDetalleEmbarque }       from '../components/detalles/ModalDetalleEmbarque';
-import { ModalDetallePresplit }       from '../components/detalles/ModalDetallePresplit';
-import { ModalReciboInfo }            from '../components/detalles/ModalReciboInfo';
+import { useInventario } from '../hooks/useInventario';
+import { InventarioTable } from '../components/inventario/InventarioTable';
+import { FiltrosBarra } from '../components/inventario/FiltrosBarra';
+import { EstadisticasPanel } from '../components/inventario/EstadisticasPanel';
+import { ModalAuth } from '../components/autorizacion/ModalAuth';
+import { ModalAutorizacion } from '../components/autorizacion/ModalAutorizacion';
+import { MapaAlmacen } from '../components/almacen/MapaAlmacen';
+import { ModalDetalleEmbarque } from '../components/detalles/ModalDetalleEmbarque';
+import { ModalDetallePresplit } from '../components/detalles/ModalDetallePresplit';
+import { ModalReciboInfo } from '../components/detalles/ModalReciboInfo';
 // FIX H-4: importar ubicacionApi en lugar de usar fetch() directo
-import { ubicacionApi }               from '../api/inventarioApi';
+import { ubicacionApi } from '../api/inventarioApi';
 import type {
   FiltroInventario,
   ItemInventario,
@@ -21,10 +21,10 @@ import type {
 // ─── Estado de los modales de doble clic ────────────────────────────────────
 
 type ModalDetalle =
-  | { tipo: 'embarque';     item: ItemInventario }
-  | { tipo: 'presplit';     item: ItemInventario }
-  | { tipo: 'recibo';       item: ItemInventario }
-  | { tipo: 'mapa';         item: ItemInventario }
+  | { tipo: 'embarque'; item: ItemInventario }
+  | { tipo: 'presplit'; item: ItemInventario }
+  | { tipo: 'recibo'; item: ItemInventario }
+  | { tipo: 'mapa'; item: ItemInventario }
   | { tipo: 'ubica-manual'; item: ItemInventario }
   | null;
 
@@ -36,22 +36,22 @@ interface UbicaManualState {
 }
 
 export function Principal() {
-  const [filtro, setFiltro]               = useState<FiltroInventario>('todos');
-  const [buscar, setBuscar]               = useState('');
-  const [inputBuscar, setInputBuscar]     = useState('');
+  const [filtro, setFiltro] = useState<FiltroInventario>('todos');
+  const [buscar, setBuscar] = useState('');
+  const [inputBuscar, setInputBuscar] = useState('');
   const [seleccionadas, setSeleccionadas] = useState<Set<number>>(new Set());
 
   // Modales de autorización
   const [modalAuthVisible, setModalAuthVisible] = useState(false);
-  const [modalAutorizar, setModalAutorizar]     = useState<null | { tipo: 'A' | 'C' }>(null);
+  const [modalAutorizar, setModalAutorizar] = useState<null | { tipo: 'A' | 'C' }>(null);
   const [modoAutorizacion, setModoAutorizacion] = useState(false);
 
   // Modal de doble clic (uno a la vez)
   const [modalDetalle, setModalDetalle] = useState<ModalDetalle>(null);
 
   // FIX H-4: estado tipado para la asignación de ubicación
-  const [nuevaUbicacion, setNuevaUbicacion]   = useState('');
-  const [ubicaState, setUbicaState]           = useState<UbicaManualState>({
+  const [nuevaUbicacion, setNuevaUbicacion] = useState('');
+  const [ubicaState, setUbicaState] = useState<UbicaManualState>({
     guardando: false,
     error: '',
   });
@@ -84,10 +84,10 @@ export function Principal() {
     .map(idx => data?.items[idx])
     .filter((item): item is ItemInventario => !!item && item.conse === 2)
     .map(item => ({
-      folio:   item.nombre.substring(0, 6),
+      folio: item.nombre.substring(0, 6),
       cveProd: item.cvePro,
-      tarima:  item.tarima,
-      tipo:    item.tipo as 'PTC' | 'PTP',
+      tarima: item.tarima,
+      tipo: item.tipo as 'PTC' | 'PTP',
     }));
 
   const handleFiltroChange = useCallback((f: FiltroInventario) => {
@@ -132,12 +132,12 @@ export function Principal() {
     const item = modalDetalle.item;
     try {
       await ubicacionApi.actualizarUbicacion({
-        folio:        item.nombre.substring(0, 6),
-        cveProd:      item.cvePro,
-        tarima:       item.tarima,
-        tipo:         item.tipo as 'PTC' | 'PTP',
-        ubicacion:    nuevaUbicacion,
-        usuario:      'WEB',
+        folio: item.nombre.substring(0, 6),
+        cveProd: item.cvePro,
+        tarima: item.tarima,
+        tipo: item.tipo as 'PTC' | 'PTP',
+        ubicacion: nuevaUbicacion,
+        usuario: 'WEB',
         nombreMaquina: window.location.hostname,
       });
       cerrarModal();
@@ -150,7 +150,7 @@ export function Principal() {
 
   // ── Formato del contador ──────────────────────────────────────────────────
   const formatSegundos = (s: number) => {
-    const m   = Math.floor(s / 60);
+    const m = Math.floor(s / 60);
     const sec = s % 60;
     return m > 0 ? `${m}:${sec.toString().padStart(2, '0')}` : `${sec}s`;
   };
@@ -199,11 +199,10 @@ export function Principal() {
               ✓ Autorizando
             </button>
           )}
-          <span className={`font-mono text-xs px-2 py-1 rounded border ${
-            segundosHastaRefresco < 60
+          <span className={`font-mono text-xs px-2 py-1 rounded border ${segundosHastaRefresco < 60
               ? 'text-orange-300 border-orange-700'
               : 'text-gray-300 border-gray-600'
-          }`}>⏱ {formatSegundos(segundosHastaRefresco)}</span>
+            }`}>⏱ {formatSegundos(segundosHastaRefresco)}</span>
           <button onClick={refrescarManual} disabled={isFetching}
             className="px-2 py-1 text-xs rounded bg-blue-700 hover:bg-blue-600 disabled:opacity-50 border border-blue-500">
             {isFetching ? '⏳' : '🔄'}

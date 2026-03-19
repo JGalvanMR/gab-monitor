@@ -165,8 +165,8 @@ public class TarimasController : ControllerBase
             const string sql = @"
                 SELECT 
                     Eti_Caja AS Caja,
-                    ISNULL(Eti_Imei,'') AS Imei,
-                    ISNULL(Eti_Version,'') AS Version,
+                    ISNULL(Imei,'') AS Imei,
+                    ISNULL(Version,'') AS Version,
                     CONVERT(varchar(10), Fecha, 103) AS Fecha,
                     Estatus
                 FROM Tb_Det_Etiqueta_Presplit
