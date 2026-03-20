@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GabMonitor.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dc5d9cee2a6143dc3943f3da84540abee27ed38c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7c4530cc368bb15f39e2c513d2a17df03100ce64")]
 [assembly: System.Reflection.AssemblyProductAttribute("GabMonitor.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GabMonitor.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
