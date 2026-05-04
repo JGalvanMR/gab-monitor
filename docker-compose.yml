@@ -15,7 +15,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__GabIrapuato=Server=GABIRA1\SQL2005;Database=GAB_Irapuato;Connect Timeout=130;User ID=sa;Password=${DB_PASSWORD};MultipleActiveResultSets=True;TrustServerCertificate=True
+      - ConnectionStrings__GabIrapuato=Server=189.206.160.206,2352\gabiraSQL;Database=GAB_Irapuato;Connect Timeout=130;User ID=sa;Password=${DB_PASSWORD};MultipleActiveResultSets=True;TrustServerCertificate=True
     restart: unless-stopped
     networks:
       - gab-net

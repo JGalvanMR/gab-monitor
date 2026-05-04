@@ -148,13 +148,32 @@ public class InventarioController : ControllerBase
         // Filtros por botón
         query = filtro switch
         {
-            "caducado"     => query.Where(i => i.Dias <= 4  && i.Conse == 2),
-            "proximo"      => query.Where(i => i.Dias > 4   && i.Dias <= 11 && i.Conse == 2),
-            "autTrailer"   => query.Where(i => i.PreAutorizado == "A"),
+            "caducado" => query.Where(i => i.Dias <= 4 && i.Conse == 2),
+            "proximo" => query.Where(i => i.Dias > 4 && i.Dias <= 11 && i.Conse == 2),
+            "autTrailer" => query.Where(i => i.PreAutorizado == "A"),
             "autCamioneta" => query.Where(i => i.PreAutorizado == "C"),
-            _              => query  // "todos" o null → sin filtro
+            _ => query  // "todos" o null → sin filtro
         };
 
         return query.ToList();
+    }
+
+    /// <summary>
+    /// Descargar / Exportar Inventario en Excel (equivalente a BtnExcel_Click del WinForms).
+    /// GET /api/inventario/exportar/excel?filtro=...
+    /// </summary>
+    [HttpGet("exportar/excel")]
+    public async Task<IActionResult> ExportarExcel([FromQuery] string? filtro = null)
+    {
+        var (items, _) = await _service.GenerarInventarioConsolidadoAsync();
+        var itemsFiltrados = AplicarFiltro(items, filtro, null);
+
+        // Aquí se implementaría la generación del archivo Excel con itemsFiltrados
+        // Por simplicidad, retornamos el JSON de los items filtrados
+        return Ok(new
+        {
+            mensaje = "Funcionalidad de exportar a Excel no implementada en esta demo",
+            items = itemsFiltrados
+        });
     }
 }

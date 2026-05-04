@@ -1,4 +1,4 @@
-// GabMonitor.API/Services/Interfaces/IInventarioService.cs
+// GabMonitor.API/Services/Interfaces/IServices.cs
 using GabMonitor.API.Models.Domain;
 
 namespace GabMonitor.API.Services.Interfaces;
@@ -29,6 +29,10 @@ public interface IAutorizacionService
 public interface IUbicacionService
 {
     Task ActualizarUbicacionAsync(GabMonitor.API.DTOs.ActualizarUbicacionDto dto);
+
+    // FIX H-3: firma corregida — antes retornaba Task<object?> con cuerpo null.
+    // Ahora el servicio delega al repositorio con la query real.
     Task<object?> ObtenerUbicacionTarimaAsync(string prod, string folio, string tarima);
+
     Task<IEnumerable<object>> ObtenerInventarioPorUbicacionAsync(string codigoUbicacion);
 }

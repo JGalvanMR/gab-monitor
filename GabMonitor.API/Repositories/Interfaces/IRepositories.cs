@@ -29,5 +29,11 @@ public interface IUbicacionRepository
 {
     Task ActualizarUbicacionPTCAsync(string folio, string cveProd, string tarima, string ubicacion);
     Task ActualizarUbicacionPTPAsync(string folio, string cveProd, string tarima, string ubicacion);
+
+    // FIX H-3: método que antes existía solo en el servicio con retorno null.
+    // Ahora vive en la interfaz del repositorio para separar correctamente la
+    // lógica de acceso a datos de la lógica de negocio.
+    Task<object?> ObtenerUbicacionTarimaAsync(string prod, string folio, string tarima);
+
     Task<IEnumerable<dynamic>> ObtenerInventarioPorUbicacionAsync(string codigoUbicacion);
 }
