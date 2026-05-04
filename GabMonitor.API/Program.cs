@@ -27,7 +27,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("GabPolicy", policy =>
     {
         policy.WithOrigins(
-            "http://localhost:5173",
+            "http://localhost:5000",
             "https://monitor.gab.local",
             "http://monitor.gab.local"
         )
